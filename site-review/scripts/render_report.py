@@ -189,6 +189,14 @@ def render(report: dict, findings: list[dict], summary: str, template: str, run_
     return re.sub(r"\{\{(\w+)\}\}", lambda m: parts.get(m.group(1), ""), template)
 
 
+def artifact_fragment(html: str) -> str:
+    """The same page without <!doctype>/<html>/<head>/<body>: claude.ai Artifacts add their own skeleton."""
+    title = re.search(r"<title>.*?</title>", html, re.S).group(0)
+    style = re.search(r"<style>.*?</style>", html, re.S).group(0)
+    body = re.search(r"<body[^>]*>(.*)</body>", html, re.S).group(1)
+    return f'{title}\n<meta name="claude:viewport-fit-sides" content="cover">\n{style}\n{body.strip()}\n'
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--run", required=True, type=Path)
@@ -201,6 +209,7 @@ def main(argv=None) -> int:
                   a.template.read_text(encoding="utf-8"), str(a.run))
     out = a.run / "report.html"
     out.write_text(html, encoding="utf-8")
+    (a.run / "report.artifact.html").write_text(artifact_fragment(html), encoding="utf-8")
     print(str(out))
     return 0
 

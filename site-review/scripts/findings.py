@@ -7,6 +7,7 @@ from pathlib import Path
 SEVERITIES = ("critical", "high", "medium", "low")  # order = rank
 MODULES = ("seo", "speed", "cro", "design", "code", "pl")
 EFFORTS = ("S", "M", "L")
+EVIDENCE_TYPES = ("http", "dom", "screenshot", "measurement", "file")
 CONFIRMED = "potwierdzone"
 UNVERIFIED = "do weryfikacji"
 
@@ -24,6 +25,9 @@ def validate(f: dict) -> list[str]:
         errors.append(f"bad impact: {imp!r} (expected int 1-3)")
     if f.get("effort") not in (None, "") and f["effort"] not in EFFORTS:
         errors.append(f"bad effort: {f['effort']!r}")
+    ev = f.get("evidence")
+    if isinstance(ev, dict) and ev.get("type") not in (None, "") and ev["type"] not in EVIDENCE_TYPES:
+        errors.append(f"bad evidence.type: {ev['type']!r} (expected one of {', '.join(EVIDENCE_TYPES)})")
     return errors
 
 

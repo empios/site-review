@@ -19,7 +19,9 @@ METRICS = {"lcp_ms": "largest-contentful-paint", "cls": "cumulative-layout-shift
            "tbt_ms": "total-blocking-time", "fcp_ms": "first-contentful-paint", "si_ms": "speed-index"}
 # (metric, needs-improvement threshold, poor threshold, label, fix)
 THRESHOLDS = [
-    ("lcp", "lcp_ms", 2500, 4000, "LCP", "Zoptymalizuj największy element (obraz hero: rozmiar, format, preload)."),
+    ("lcp", "lcp_ms", 2500, 4000, "LCP",
+     "Przyspiesz wyświetlenie największego elementu pierwszego ekranu: sprawdź, co go opóźnia "
+     "(czas serwera, blokujące CSS/fonty, wielkość obrazu) i usuń największe opóźnienie."),
     ("cls", "cls", 0.1, 0.25, "CLS", "Zarezerwuj miejsce na obrazy, reklamy i fonty (width/height, aspect-ratio)."),
     ("tbt", "tbt_ms", 200, 600, "TBT", "Ogranicz JavaScript na starcie: dziel bundle, odrocz skrypty zewnętrzne."),
 ]
@@ -75,19 +77,31 @@ def _load(path: Path):
 
 def summarize(run_dir: Path, url: str) -> dict:
     result = {"mobile": None, "desktop": None, "findings": [], "trackers_before_consent": [],
-              "lh_scores": {}, "depth": "pominięty", "reason": None}
+              "analytics_detected": [], "external_fonts_before_consent": [], "lh_scores": {},
+              "median_run_file": {}, "depth": "pominięty", "reason": None}
     for form in ("mobile", "desktop"):
         files = sorted(p for p in run_dir.glob(f"lh-{form}-*.json") if re.fullmatch(rf"lh-{form}-\d+\.json", p.name))
-        reports = [r for r in (_load(p) for p in files) if r is not None]
-        s = median_run(reports)
+        loaded = [(p.name, r) for p, r in ((p, _load(p)) for p in files) if r is not None]
+        valid = [(n, r) for n, r in loaded if _valid(r)]
+        s = median_run([r for _, r in loaded])
         result[form] = s
         if s:
             result["findings"] += speed_findings(s, url, form)
-            first = next(r for r in reports if _valid(r))
-            result["lh_scores"][form] = {k: round(v["score"] * 100) for k, v in first.get("categories", {}).items()
-                                         if isinstance(v, dict) and v.get("score") is not None}
+            # category scores: median per category across valid runs (same basis as the metrics)
+            cats: dict[str, list[float]] = {}
+            for _, r in valid:
+                for k, v in (r.get("categories") or {}).items():
+                    if isinstance(v, dict) and v.get("score") is not None:
+                        cats.setdefault(k, []).append(float(v["score"]))
+            result["lh_scores"][form] = {k: round(statistics.median(v) * 100) for k, v in cats.items()}
+            # the run whose LCP is closest to the median LCP — read diagnostics (insights) from this file
+            name, median_report = min(valid, key=lambda nr: (abs(float(
+                nr[1]["audits"]["largest-contentful-paint"]["numericValue"]) - s["lcp_ms"]), nr[0]))
+            result["median_run_file"][form] = name
             if form == "mobile":
-                result["trackers_before_consent"] = trackers.before_consent(first)
+                result["trackers_before_consent"] = trackers.before_consent(median_report)
+                result["analytics_detected"] = trackers.analytics_detected(median_report)
+                result["external_fonts_before_consent"] = trackers.external_fonts(median_report)
     if result["mobile"] or result["desktop"]:
         result["depth"] = "pełny"
     else:

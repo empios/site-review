@@ -23,6 +23,26 @@ const SHOTS = [
   { name: "shot-375-dark", width: 375, height: 812, mobile: true, dark: true },
 ];
 
+const SCROLL_THROUGH = `(async () => {
+  const limit = Math.min(document.documentElement.scrollHeight, ${MAX_HEIGHT} * 1.5);
+  const step = Math.max(200, Math.floor(innerHeight * 0.8));
+  for (let y = 0; y < limit; y += step) { window.scrollTo(0, y); await new Promise(r => setTimeout(r, 120)); }
+  window.scrollTo(0, limit); await new Promise(r => setTimeout(r, 200));
+  window.scrollTo(0, 0); return true;
+})()`;
+// innerWidth/scrollWidth/height plus elements still invisible (opacity 0 / visibility hidden) within the captured area
+const MEASURE = `JSON.stringify((() => {
+  let invisible = 0;
+  for (const el of document.body.querySelectorAll("*")) {
+    if (["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE"].includes(el.tagName)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width * r.height === 0 || r.top + scrollY > ${MAX_HEIGHT}) continue;
+    if (!el.textContent.trim() && !["IMG", "SVG", "VIDEO", "CANVAS"].includes(el.tagName)) continue;
+    const cs = getComputedStyle(el);
+    if (cs.opacity === "0" || cs.visibility === "hidden") invisible++;
+  }
+  return { iw: innerWidth, sw: document.documentElement.scrollWidth, sh: document.documentElement.scrollHeight, invisible };
+})())`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const profile = mkdtempSync(join(tmpdir(), "site-review-chrome-"));
 const chrome = spawn(chromePath, [
@@ -99,17 +119,21 @@ async function main() {
     });
     await cdp.send("Emulation.setTouchEmulationEnabled", { enabled: s.mobile });
     await cdp.send("Emulation.setEmulatedMedia", {
-      features: [{ name: "prefers-color-scheme", value: s.dark ? "dark" : "light" }],
+      features: [
+        { name: "prefers-color-scheme", value: s.dark ? "dark" : "light" },
+        { name: "prefers-reduced-motion", value: "reduce" },
+      ],
     });
     const loaded = cdp.waitFor("Page.loadEventFired", 30000);
     const nav = await cdp.send("Page.navigate", { url });
     if (nav.errorText) throw new Error(`navigation failed: ${nav.errorText}`);
     await loaded;
-    await sleep(1500);
-    const { result } = await cdp.send("Runtime.evaluate", {
-      expression: "JSON.stringify({iw: innerWidth, sw: document.documentElement.scrollWidth, sh: document.documentElement.scrollHeight})",
-      returnByValue: true,
-    });
+    await sleep(1000);
+    // Scroll through the page so scroll-triggered content (IntersectionObserver reveals, lazy images) is shown
+    // before the full-page capture, then return to the top.
+    await cdp.send("Runtime.evaluate", { expression: SCROLL_THROUGH, awaitPromise: true, returnByValue: true });
+    await sleep(800);
+    const { result } = await cdp.send("Runtime.evaluate", { expression: MEASURE, returnByValue: true });
     const m = JSON.parse(result.value);
     const height = Math.min(Math.max(m.sh, s.height), MAX_HEIGHT);
     const shot = await cdp.send("Page.captureScreenshot", {
@@ -126,7 +150,7 @@ async function main() {
     if (!s.dark) {
       metrics[String(s.width)] = {
         innerWidth: m.iw, scrollWidth: m.sw, pageHeight: m.sh, horizontalScroll: m.sw > m.iw + 1,
-        truncated: m.sh > MAX_HEIGHT,
+        truncated: m.sh > MAX_HEIGHT, invisibleElements: m.invisible,
       };
     }
   }

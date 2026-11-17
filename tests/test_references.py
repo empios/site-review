@@ -43,7 +43,10 @@ class ReferencesTest(unittest.TestCase):
         cat = catalog()
         need = ["seo-content-js-only", "seo-<elem>-js-only", "speed-lcp-<form>", "speed-cls-<form>",
                 "speed-tbt-<form>", "seo-canonical-missing", "seo-noindex", "img-oversized",
-                "a11y-img-alt-missing", "pl-tracking-before-consent"]
+                "a11y-img-alt-missing", "pl-tracking-before-consent",
+                # ids invented by modules in the first real run (codeworks-it.pl), now catalogued
+                "speed-redirect", "pl-external-fonts", "cro-cta-phone-only", "cro-contact-email-private",
+                "cro-cta-offpage-link"]
         self.assertEqual([i for i in need if i not in cat], [])
 
     def test_delegation_covers_modules(self):
@@ -71,3 +74,20 @@ class LighthouseAuditNamesTest(unittest.TestCase):
             named |= set(re.findall(r"`lh:([a-z0-9-]+)`", (REF / f"{name}.md").read_text(encoding="utf-8")))
         self.assertGreaterEqual(len(named), 12)
         self.assertEqual(sorted(named - known), [])
+
+
+class ModuleFormatTest(unittest.TestCase):
+    def test_module_format_doc_referenced_everywhere(self):
+        doc = (REF / "module-format.md").read_text(encoding="utf-8")
+        for word in ("evidence.type", "needles", "tags", "new_ids", "całej witryny"):
+            self.assertIn(word, doc)
+        for name in MODULE_FILES:
+            self.assertIn("module-format.md", (REF / f"{name}.md").read_text(encoding="utf-8"), name)
+
+    def test_evidence_types_documented_match_code(self):
+        doc = (REF / "module-format.md").read_text(encoding="utf-8")
+        for t in findings.EVIDENCE_TYPES:
+            self.assertIn(f"`{t}`", doc)
+
+    def test_seo_site_wide_rule(self):
+        self.assertNotIn("Jeden wpis na stronę (`url`).", (REF / "seo.md").read_text(encoding="utf-8"))

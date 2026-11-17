@@ -2,6 +2,8 @@
 
 ## Instrukcja dla subagenta
 
+Format wyniku i zasady wspólne (pola znaleziska, typy dowodu, problemy całej witryny, nowe identyfikatory): `references/module-format.md`.
+
 Moduł działa tylko, gdy `context.json.repo` jest ustawione. Bez repo zapisz `{"module": "code", "depth": "pominięty", "reason": "brak repo", "findings": []}` i zakończ.
 
 Wejście: repo, `context.json.framework`, znaleziska innych modułów (jeśli już są w `RUN/modules/`), `speed.json`.

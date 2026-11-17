@@ -18,11 +18,13 @@ import scoring  # noqa: E402
 
 
 def merge(run: Path, repo: str | None, prev: Path | None) -> dict:
-    modules, raw, invalid = {}, [], []
+    modules, raw, invalid, new_ids = {}, [], [], {}
     for path in sorted((run / "modules").glob("*.json")):
         data = json.loads(path.read_text(encoding="utf-8"))
         name = data.get("module") or path.stem
         modules[name] = {"depth": data.get("depth", scoring.SKIPPED), "reason": data.get("reason")}
+        if data.get("new_ids"):
+            new_ids[name] = sorted(set(data["new_ids"]))
         for f in data.get("findings") or []:
             errs = fnd.validate(f)
             if errs:
@@ -58,6 +60,7 @@ def merge(run: Path, repo: str | None, prev: Path | None) -> dict:
         "invalid": invalid,
         "recheck": recheck.diff(prev_list, merged, skipped, audited) if prev_list is not None else None,
         "modules": modules,
+        "new_ids": new_ids,
     }
     (run / "findings.json").write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
     (run / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

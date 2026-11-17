@@ -96,3 +96,13 @@ class DedupeOwnershipTest(unittest.TestCase):
     def test_unknown_prefix_keeps_reported_module(self):
         f = make(id="custom-thing", module="cro", tags=["cro"])
         self.assertEqual(findings.dedupe([f, dict(f)])[0]["module"], "cro")
+
+
+class EvidenceTypeTest(unittest.TestCase):
+    def test_bad_evidence_type_rejected(self):
+        errors = findings.validate(make(evidence={"type": "vibes", "detail": "x"}))
+        self.assertTrue(any("evidence.type" in e for e in errors))
+
+    def test_known_evidence_types_ok(self):
+        for t in findings.EVIDENCE_TYPES:
+            self.assertEqual(findings.validate(make(evidence={"type": t, "detail": "x"})), [], t)

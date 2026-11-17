@@ -52,3 +52,22 @@ class SkillOperationalTest(unittest.TestCase):
     def test_crux_only_for_public_urls(self):
         step = [l for l in self.text.splitlines() if "scripts/crux.py" in l and "START_URL" in l][0]
         self.assertIn("publiczn", step)
+
+
+class SkillRunSetupTest(unittest.TestCase):
+    text = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+
+    def test_start_url_defined_as_final_url(self):
+        self.assertIn("`START_URL` = `basics.json.final_url`", self.text)
+
+    def test_stable_run_dir_with_seconds(self):
+        self.assertIn("~/.site-review/<host>/", self.text)
+        self.assertIn("YYYY-MM-DD-HHMMSS", self.text)
+        self.assertNotIn("<scratchpad>/site-review", self.text)
+
+    def test_publishes_artifact_fragment(self):
+        self.assertIn("report.artifact.html", self.text)
+
+    def test_module_format_and_new_ids_mentioned(self):
+        self.assertIn("references/module-format.md", self.text)
+        self.assertIn("new_ids", self.text)

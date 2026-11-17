@@ -2,11 +2,13 @@
 
 ## Instrukcja dla subagenta
 
+Format wyniku i zasady wspólne (pola znaleziska, typy dowodu, problemy całej witryny, nowe identyfikatory): `references/module-format.md`.
+
 Wejście: `RUN/speed.json` (mediany Lighthouse mobile/desktop, gotowe znaleziska progowe, `lh_scores`), surowe raporty `RUN/lh-*.json`, `RUN/crux.json` (dane od prawdziwych użytkowników, jeśli był klucz), `basics.json` (nagłówki).
 
-1. Weź `speed.json` → `findings` bez zmian (progi liczy kod, nie model).
+1. Weź `speed.json` → `findings`. Nie zmieniaj `id`, `severity`, `impact` ani `evidence` (progi liczy kod, nie model). Pole `fix` przepisz na konkretną poprawkę dla tej strony — np. dla LCP sprawdź w `lh:lcp-breakdown-insight`, czym jest element LCP (obraz, tekst, wideo) i która faza go opóźnia.
 2. Jeśli `speed.json.depth == "pominięty"`, zapisz moduł jako `pominięty` z tym samym `reason` i zakończ.
-3. Z raportu mediany mobile (`lh-mobile-*.json`) odczytaj audyty z checklisty (`lh:<id>` to klucz w `audits`; w Lighthouse 13 większość diagnostyk to audyty `*-insight`, liczby są w `details`) i dodaj znaleziska z liczbami jako dowód.
+3. Z raportu mediany mobile (plik z `speed.json` → `median_run_file.mobile`) odczytaj audyty z checklisty (`lh:<id>` to klucz w `audits`; w Lighthouse 13 większość diagnostyk to audyty `*-insight`, liczby są w `details`) i dodaj znaleziska z liczbami jako dowód.
 4. Jeśli `crux.json.available`, porównaj p75 z progami (LCP 2500/4000 ms, INP 200/500 ms, CLS 0.1/0.25) i dodaj `speed-field-poor` dla kategorii słabej. W raporcie zawsze rozróżniaj dane laboratoryjne (Lighthouse) i terenowe (CrUX).
 5. Zapisz `RUN/modules/speed.json`. Głębokość: `pełny`, gdy Lighthouse się udał (z delegacją lub bez).
 
@@ -35,4 +37,5 @@ Zasady jak w module SEO: dowód z liczbą, `id` z katalogu, konkretna poprawka. 
 | `font-blocking` | `lh:font-display-insight` niepuste | low | 1 | S | measurement |
 | `speed-no-compression` | `lh:document-latency-insight` zgłasza brak kompresji | medium | 2 | S | http |
 | `speed-no-cache-headers` | `lh:cache-insight`, > 10 zasobów | low | 1 | S | http |
+| `speed-redirect` | `lh:document-latency-insight` zgłasza przekierowanie przy wejściu (np. bez www → www) | low | 1 | S | measurement |
 | `speed-third-party-heavy` | `lh:third-parties-insight`, blokowanie > 250 ms | medium | 2 | M | measurement |
