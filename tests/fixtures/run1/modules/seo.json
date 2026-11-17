@@ -1,0 +1,5 @@
+{"module": "seo", "depth": "płytki", "reason": "brak claude-seo, checklista fallback", "findings": [
+ {"id": "seo-canonical-missing", "module": "seo", "tags": ["seo"], "severity": "high", "title": "Brak canonical", "url": "https://example.com/", "evidence": {"type": "dom", "detail": "brak <link rel=canonical>"}, "fix": "Dodaj canonical", "impact": 2, "effort": "S", "source": "fallback"},
+ {"id": "img-oversized", "module": "speed", "tags": ["speed"], "severity": "medium", "title": "Za duży obraz hero", "url": "https://example.com/", "evidence": {"type": "measurement", "detail": "hero.jpg 3.1 MB"}, "fix": "Kompresja do WebP", "impact": 3, "effort": "S", "source": "fallback"},
+ {"id": "seo-bad", "module": "seo", "severity": "low", "title": "Zły wpis", "url": "https://example.com/", "fix": "x", "impact": 7, "effort": "S", "source": "fallback"}
+]}

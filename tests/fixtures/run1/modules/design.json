@@ -1,0 +1,4 @@
+{"module": "design", "depth": "pełny", "reason": null, "findings": [
+ {"id": "img-oversized", "module": "design", "tags": ["design"], "severity": "high", "title": "Obraz hero ładuje się długo", "url": "https://example.com/", "evidence": {"type": "screenshot", "detail": "pusty hero przez 3 s", "path": "evidence/hero.png"}, "fix": "Placeholder + WebP", "impact": 3, "effort": "S", "source": "design-critique"},
+ {"id": "design-cta-weak", "module": "design", "tags": ["design", "cro"], "severity": "medium", "title": "Słaby kontrast CTA", "url": "https://example.com/", "fix": "Zwiększ kontrast", "impact": 2, "effort": "S", "source": "design-critique"}
+]}
