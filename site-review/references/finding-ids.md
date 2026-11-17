@@ -90,6 +90,7 @@ Każde znalezisko używa `id` z tej listy. Ten sam problem zgłoszony przez kilk
 | `a11y-focus-invisible` | niewidoczny focus klawiatury |
 | `a11y-label-missing` | pola formularza bez etykiet |
 | `a11y-heading-order` | nagłówki przeskakują poziomy |
+| `design-viewport-missing` | brak `<meta name=viewport>` — telefon pokazuje stronę w wersji desktopowej, pomniejszoną |
 | `design-horizontal-scroll` | przewijanie poziome na telefonie |
 | `design-hierarchy-unclear` | brak jasnej hierarchii wizualnej |
 | `design-typography-readability` | za mały tekst, za długie linie, słaby interlinia |

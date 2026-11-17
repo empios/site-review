@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 .DS_Store
 .superpowers/
+tests/fixtures/acceptance/site/hero.png
+tests/fixtures/acceptance/repo/public/hero.png
