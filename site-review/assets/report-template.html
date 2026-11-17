@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{title}}</title>
+<style>
+:root {
+  --bg: #f7f6f3; --surface: #ffffff; --text: #1c1b19; --muted: #6b675f; --border: #e3e0d8;
+  --accent: #2f5d8a; --good: #2e7d4f; --warn: #b26a00; --bad: #b3261e; --chip: #efece5;
+  --sev-critical: #b3261e; --sev-high: #c4501b; --sev-medium: #b26a00; --sev-low: #6b675f;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161514; --surface: #201f1d; --text: #ecebe7; --muted: #a29e95; --border: #34322e;
+    --accent: #8db4dc; --good: #6fc08f; --warn: #e0a243; --bad: #f08a80; --chip: #2b2a27;
+    --sev-critical: #f08a80; --sev-high: #f0a070; --sev-medium: #e0a243; --sev-low: #a29e95;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161514; --surface: #201f1d; --text: #ecebe7; --muted: #a29e95; --border: #34322e;
+  --accent: #8db4dc; --good: #6fc08f; --warn: #e0a243; --bad: #f08a80; --chip: #2b2a27;
+  --sev-critical: #f08a80; --sev-high: #f0a070; --sev-medium: #e0a243; --sev-low: #a29e95;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
+header h1 { font-size: 1.6rem; margin: 0 0 4px; overflow-wrap: anywhere; }
+header p { margin: 0; color: var(--muted); }
+section { margin-top: 40px; }
+h2 { font-size: 1.2rem; margin: 0 0 12px; }
+.summary { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.summary .overall { font-size: 2.4rem; font-weight: 700; margin: 0 0 8px; }
+.summary p { margin: 0 0 8px; white-space: pre-wrap; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.card .name { font-size: .85rem; color: var(--muted); }
+.card .score { font-size: 1.8rem; font-weight: 700; }
+.card .meta { font-size: .8rem; color: var(--muted); overflow-wrap: anywhere; }
+.s-good { color: var(--good); } .s-warn { color: var(--warn); } .s-bad { color: var(--bad); } .s-none { color: var(--muted); }
+ol.top { padding-left: 1.4em; margin: 0; }
+ol.top li, .finding { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 14px; margin-bottom: 10px; }
+.finding h3, ol.top h3 { font-size: 1rem; margin: 0 0 6px; overflow-wrap: anywhere; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.chip { background: var(--chip); border-radius: 999px; padding: 1px 9px; font-size: .78rem; }
+.sev-critical { color: var(--sev-critical); font-weight: 700; } .sev-high { color: var(--sev-high); font-weight: 700; }
+.sev-medium { color: var(--sev-medium); font-weight: 600; } .sev-low { color: var(--sev-low); }
+.kv { font-size: .9rem; margin: 2px 0; overflow-wrap: anywhere; }
+.kv b { font-weight: 600; }
+code { font: .85em ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--chip); padding: 1px 5px;
+  border-radius: 5px; overflow-wrap: anywhere; }
+details { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px;
+  margin-bottom: 10px; }
+summary { cursor: pointer; font-weight: 600; }
+details .finding { background: var(--bg); }
+img.shot { max-width: 100%; height: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 6px; }
+.muted { color: var(--muted); }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top;
+  overflow-wrap: anywhere; }
+.table-wrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>{{title}}</h1>
+  <p>{{subtitle}}</p>
+</header>
+
+<section id="sec-summary">
+  <h2>Streszczenie</h2>
+  <div class="summary">{{summary}}</div>
+</section>
+
+{{recheck}}
+
+<section id="sec-scores">
+  <h2>Oceny obszarów</h2>
+  <div class="cards">{{scorecards}}</div>
+</section>
+
+<section id="sec-top">
+  <h2>Zrób teraz</h2>
+  {{top}}
+</section>
+
+<section id="sec-modules">
+  <h2>Szczegóły według obszaru</h2>
+  {{modules}}
+</section>
+
+<section id="sec-unverified">
+  <h2>Do weryfikacji</h2>
+  <p class="muted">Znaleziska bez twardego dowodu. Nie liczą się do ocen — sprawdź je ręcznie.</p>
+  {{unverified}}
+</section>
+
+<section id="sec-method">
+  <h2>Metodologia</h2>
+  {{method}}
+</section>
+</main>
+</body>
+</html>
