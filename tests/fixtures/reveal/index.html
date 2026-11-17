@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reveal</title>
+<style>section{min-height:900px;padding:40px} .reveal{opacity:0;transition:opacity .3s} .reveal.shown{opacity:1}</style>
+</head><body>
+<section><h2 class="reveal">Sekcja 1</h2><p class="reveal">Treść sekcji 1.</p></section>
+<section><h2 class="reveal">Sekcja 2</h2><p class="reveal">Treść sekcji 2.</p></section>
+<section><h2 class="reveal">Sekcja 3</h2><p class="reveal">Treść sekcji 3.</p></section>
+<section><h2 class="reveal">Sekcja 4</h2><p class="reveal">Treść sekcji 4.</p></section>
+<section><h2 class="reveal">Sekcja 5</h2><p class="reveal">Treść sekcji 5.</p></section>
+<section><h2 class="reveal">Sekcja 6</h2><p class="reveal">Treść sekcji 6.</p></section>
+<section><h2 class="reveal">Sekcja 7</h2><p class="reveal">Treść sekcji 7.</p></section>
+<section><h2 class="reveal">Sekcja 8</h2><p class="reveal">Treść sekcji 8.</p></section>
+<script>
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("shown"); io.unobserve(e.target); } }));
+document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+</script>
+</body></html>

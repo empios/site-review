@@ -6,14 +6,16 @@ Moduł uruchamia się, gdy `context.json.pl == true` (automatycznie dla `lang="p
 
 ## Instrukcja dla subagenta
 
+Format wyniku i zasady wspólne (pola znaleziska, typy dowodu, problemy całej witryny, nowe identyfikatory): `references/module-format.md`.
+
 Wejście: `speed.json` → `trackers_before_consent` (lista hostów śledzących załadowanych bez żadnej interakcji = przed zgodą), zrzuty 375/1440 px, `basics.json`, surowe HTML.
 
-1. Tracking przed zgodą: każdy host z `trackers_before_consent` → jedno znalezisko `pl-tracking-before-consent` na stronę, dowód typu `measurement` z listą hostów („załadowane przy otwarciu strony, bez kliknięcia w baner”).
+1. Fonty zewnętrzne: każdy host z `speed.json` → `external_fonts_before_consent` → jedno znalezisko `pl-external-fonts` (dowód: lista hostów). Tracking przed zgodą: każdy host z `trackers_before_consent` → jedno znalezisko `pl-tracking-before-consent` na stronę, dowód typu `measurement` z listą hostów („załadowane przy otwarciu strony, bez kliknięcia w baner”).
 2. Baner cookies: na zrzucie 375 px — czy jest baner, czy „Odrzuć” jest równie łatwe jak „Akceptuj” (ten sam poziom, podobna wielkość).
 3. Linki prawne: w HTML szukaj linków do polityki prywatności, regulaminu, danych firmy (stopka).
 4. Formularze: czy przy formularzu jest informacja o administratorze danych / link do polityki.
 5. Tekst: jeśli jest skill `humanizer-polish` lub `anthropic-skills:humanizer-polish`, użyj go tylko do oceny (nie przepisuj strony) nagłówka i pierwszego akapitu strony głównej. Bez skilla pomiń `pl-copy-ai-sounding`.
-6. Głębokość: `pełny`, gdy było 1–4 (z danymi Lighthouse); `płytki` bez danych o sieci. Zapisz `RUN/modules/pl.json`.
+6. Głębokość: `pełny`, gdy były kroki 1–4 z danymi Lighthouse (krok 5 jest opcjonalny i nie wpływa na głębokość); `płytki` bez danych o sieci. Zapisz `RUN/modules/pl.json`.
 
 ## Delegacja
 
@@ -25,11 +27,12 @@ Wejście: `speed.json` → `trackers_before_consent` (lista hostów śledzących
 | id | sprawdzenie | severity | impact | effort | dowód |
 |---|---|---|---|---|---|
 | `pl-tracking-before-consent` | hosty śledzące w ruchu przy ładowaniu strony | high | 3 | M | measurement |
+| `pl-external-fonts` | `speed.json.external_fonts_before_consent` niepuste | low | 1 | S | measurement |
 | `pl-cookie-banner-missing` | są trackery/cookies niekonieczne, brak banera | high | 3 | M | screenshot |
 | `pl-cookie-reject-missing` | baner bez równie łatwego „Odrzuć” | medium | 2 | S | screenshot |
 | `pl-privacy-policy-missing` | brak linku do polityki prywatności | high | 2 | S | dom |
 | `pl-form-rodo-info-missing` | formularz zbiera dane bez informacji o administratorze/celu | medium | 2 | S | dom |
-| `pl-company-data-missing` | sklep/usługa płatna bez nazwy firmy, adresu, NIP | medium | 2 | S | dom |
+| `pl-company-data-missing` | strona sprzedaje lub podaje ceny (sklep, usługi B2C i B2B) bez nazwy firmy, adresu, NIP | medium | 2 | S | dom |
 | `pl-terms-missing` | sklep/usługa bez regulaminu | medium | 2 | M | dom |
 | `seo-lang-missing` | `lang` nie zaczyna się od `pl` na polskiej stronie | medium | 2 | S | dom |
 | `pl-hreflang-pl-missing` | są wersje językowe, brak `hreflang="pl"` | low | 1 | S | dom |

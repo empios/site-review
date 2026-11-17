@@ -2,14 +2,16 @@
 
 ## Instrukcja dla subagenta
 
+Format wyniku i zasady wspólne (pola znaleziska, typy dowodu, problemy całej witryny, nowe identyfikatory): `references/module-format.md`.
+
 Wejście (katalog przebiegu `RUN`): `context.json`, `basics.json` (statusy, nagłówki, robots, sitemap, meta każdej strony, surowe HTML w `raw/`), `render_diff.json`.
 
-1. Jeśli `context.json` → `available_skills` zawiera skill z sekcji Delegacja, użyj go na `context.url` i przetłumacz jego wyniki według `references/delegation.md`. Głębokość: `pełny`.
-2. W przeciwnym razie przejdź checklistę poniżej. Głębokość: `płytki` (checklista nie zastępuje pełnego narzędzia SEO).
+1. Jeśli `context.json` → `available_skills` zawiera pełny audyt SEO (`claude-seo`/`seo-audit` albo `squirrelscan`), użyj go na `context.url` i przetłumacz jego wyniki według `references/delegation.md`. Głębokość: `pełny`.
+2. W przeciwnym razie przejdź checklistę poniżej. Głębokość: `płytki` (checklista nie zastępuje pełnego narzędzia SEO). `seo-ai-visibility` może ją uzupełnić, ale nie zmienia głębokości na `pełny`.
 3. Zawsze dołącz znaleziska z `render_diff.json` → `findings` (są już w schemacie).
 4. Zapisz `RUN/modules/seo.json`: `{"module": "seo", "depth": ..., "reason": ..., "findings": [...]}`.
 
-Zasady: każde znalezisko ma `evidence.detail` z konkretem (nagłówek HTTP, fragment HTML, liczba znaków, adres); bez dowodu → nie zgłaszaj albo zostaw bez `evidence` (trafi do „Do weryfikacji”). Używaj `id` z `references/finding-ids.md`. Jeden wpis na stronę (`url`). `fix` = konkretna zmiana, nie ogólnik. Gdy jest repo, dodaj `needles` dla lokalizacji (tekst title, H1, wartość meta) w polu `needles` — orkiestrator uruchomi `locate_code.py`.
+Zasady: każde znalezisko ma `evidence.detail` z konkretem (nagłówek HTTP, fragment HTML, liczba znaków, adres); bez dowodu → nie zgłaszaj albo zostaw bez `evidence` (trafi do „Do weryfikacji”). Używaj `id` z `references/finding-ids.md`. Problem jednej strony → wpis z jej `url`; problem całej witryny → jeden wpis na stronie startowej (zasada w `references/module-format.md`). `fix` = konkretna zmiana, nie ogólnik. Gdy jest repo, dodaj `needles` dla lokalizacji (tekst title, H1, wartość meta) w polu `needles` — orkiestrator uruchomi `locate_code.py`.
 
 ## Delegacja
 
@@ -24,7 +26,7 @@ Zasady: każde znalezisko ma `evidence.detail` z konkretem (nagłówek HTTP, fra
 | id | sprawdzenie | severity | impact | effort | dowód |
 |---|---|---|---|---|---|
 | `seo-status-error` | status ≠ 200 dla audytowanych stron (basics.pages[].status) | critical | 3 | S | http |
-| `seo-redirect-chain` | `chain` dłuższy niż 2 adresy | medium | 2 | S | http |
+| `seo-redirect-chain` | `chain` dłuższy niż 2 adresy; sprawdź też wejście przez `http://` i wariant z/bez `www` (`curl -sIL`) | medium | 2 | S | http |
 | `seo-https-missing` | start_url http bez przekierowania na https | high | 3 | S | http |
 | `seo-mixed-content` | `http://` w src/href zasobów na stronie https (raw HTML) | medium | 2 | S | dom |
 | `seo-robots-blocks` | robots.txt blokuje audytowane strony albo `/` | critical | 3 | S | http |

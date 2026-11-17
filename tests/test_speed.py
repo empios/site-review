@@ -107,3 +107,38 @@ class CruxPublicOnlyTest(unittest.TestCase):
             c = json.loads(Path(tmp, "crux.json").read_text())
         self.assertFalse(c["available"])
         self.assertIn("niepubliczny", c["reason"])
+
+
+class SpeedSummaryTest(unittest.TestCase):
+    def summary(self):
+        import shutil
+        tmp = tempfile.mkdtemp()
+        for i in (1, 2, 3):
+            shutil.copy(LH / f"lh-mobile-{i}.json", tmp)
+        return lh_median.summarize(Path(tmp), "https://e.com/")
+
+    def test_lh_scores_are_medians(self):
+        s = self.summary()
+        self.assertEqual(s["lh_scores"]["mobile"]["performance"], 48)
+        self.assertEqual(s["lh_scores"]["mobile"]["accessibility"], 90)
+
+    def test_median_run_file_named(self):
+        self.assertEqual(self.summary()["median_run_file"]["mobile"], "lh-mobile-3.json")
+
+    def test_analytics_and_fonts_listed(self):
+        s = self.summary()
+        self.assertIn("www.googletagmanager.com", s["analytics_detected"])
+        self.assertIn("e.com/_vercel/insights", s["analytics_detected"])
+        self.assertEqual(s["external_fonts_before_consent"], ["fonts.googleapis.com", "fonts.gstatic.com"])
+
+    def test_trackers_exclude_fonts_and_first_party(self):
+        hosts = trackers.before_consent(load("lh-mobile-1.json")[0])
+        self.assertNotIn("fonts.googleapis.com", hosts)
+        self.assertNotIn("e.com", hosts)
+
+
+class SpeedFixTextTest(unittest.TestCase):
+    def test_fix_texts_do_not_assume_an_image(self):
+        s = {"performance": 40, "lcp_ms": 4500, "cls": 0.3, "tbt_ms": 700, "fcp_ms": 1, "si_ms": 1, "runs": 3}
+        for f in lh_median.speed_findings(s, "https://e.com/", "mobile"):
+            self.assertNotIn("hero", f["fix"].lower(), f["id"])

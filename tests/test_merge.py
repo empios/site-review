@@ -27,5 +27,19 @@ class MergeTest(unittest.TestCase):
             self.assertIsNone(report["recheck"])
 
 
+    def test_new_ids_collected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run = Path(tmp, "run")
+            shutil.copytree(FIXTURES / "run1", run)
+            p = run / "modules" / "speed.json"
+            m = json.loads(p.read_text())
+            m["new_ids"] = ["speed-something-new"]
+            p.write_text(json.dumps(m))
+            subprocess.run([sys.executable, str(SCRIPTS / "merge_findings.py"), "--run", str(run)], check=True,
+                           capture_output=True)
+            report = json.loads((run / "report.json").read_text())
+        self.assertEqual(report["new_ids"], {"speed": ["speed-something-new"]})
+
+
 if __name__ == "__main__":
     unittest.main()

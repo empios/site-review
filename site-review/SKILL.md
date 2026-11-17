@@ -38,7 +38,7 @@ Tryby:
 
 ## 2. Katalog przebiegu
 
-`RUN` = `<repo>/.site-review/<YYYY-MM-DD-HHMM>/`; bez repo — `<scratchpad>/site-review/<YYYY-MM-DD-HHMM>/`. Utwórz `RUN/modules/`. Przy `--recheck` znajdź najnowszy wcześniejszy `.site-review/*/findings.json` → `PREV` (brak → powiedz, że to pierwszy audyt, i kontynuuj bez porównania).
+`BASE` = `<repo>/.site-review/` w trybie z repo, a bez repo `~/.site-review/<host>/` (`<host>` z adresu, bez `www.`; ten sam katalog w każdej sesji, więc `--recheck` działa później). `RUN` = `BASE/<YYYY-MM-DD-HHMMSS>/` (z sekundami — dwa audyty w tej samej minucie nie mogą trafić do jednego katalogu). Utwórz `RUN/modules/`. Przy `--recheck` weź najnowszy wcześniejszy `BASE/*/findings.json` → `PREV` (brak → powiedz, że to pierwszy audyt tej strony, i kontynuuj bez porównania).
 
 ## 3. Rozpoznanie (główny wątek, sekwencyjnie)
 
@@ -47,6 +47,7 @@ Kroki 2 i 4 trwają długo: uruchamiaj je z timeoutem narzędzia 600000 ms (albo
 1. `python3 "$SKILL_DIR/scripts/fetch_basics.py" URL --out RUN --pages N` (`--quick` → `--pages 1`). Adres bez `http(s)://` uzupełnij o `https://`.
    - Kod wyjścia 2 = strona nieosiągalna. Kod wyjścia 4 = strona startowa zwraca błąd HTTP (4xx/5xx, często blokada botów/WAF albo przerwa techniczna). W obu przypadkach pokaż użytkownikowi status i `basics.json.errors`. Nie oceniaj treści strony błędu jak strony właściwej.
    - Bez repo: zakończ bez raportu. Z repo: zaproponuj audyt samego kodu — wtedy seo, speed, cro, design i pl zapisz jako `pominięty` z powodem „strona startowa zwróciła <status>” i przejdź do modułu `code`.
+   - Od tej chwili `START_URL` = `basics.json.final_url` (adres po przekierowaniach, np. z `www`). Tego adresu używaj we wszystkich kolejnych krokach i w polu `url` znalezisk strony startowej — inaczej znaleziska tej samej strony się nie scalą. Przekierowanie z wpisanego adresu oceni moduł SEO z `basics.json.chain`.
 2. Zrzuty dla każdej strony `i` z `basics.json.pages`: `bash "$SKILL_DIR/scripts/screenshots.sh" PAGE_URL RUN/shots/i` (pełne strony PNG, pierwsze ekrany `-fold.jpg` do raportu, `metrics.json` z prawdziwą szerokością widoku). Kod 3 = brak Chrome lub Node 22+ → zanotuj, design i CRO będą `płytki`.
 3. `python3 "$SKILL_DIR/scripts/render_diff.py" START_URL --raw RUN/raw/page-0.html --out RUN` (tylko strona startowa).
 4. `bash "$SKILL_DIR/scripts/lighthouse_runs.sh" START_URL RUN` (6 przebiegów, ~2–4 min, przy pierwszym uruchomieniu dłużej przez pobranie Lighthouse; nigdy równolegle z innymi pomiarami). Potem ZAWSZE `python3 "$SKILL_DIR/scripts/lh_median.py" RUN --url START_URL` — także gdy `lighthouse_runs.sh` zakończył się błędem: liczy medianę z udanych przebiegów albo oznacza szybkość jako `pominięty` z powodem.
@@ -55,7 +56,7 @@ Kroki 2 i 4 trwają długo: uruchamiaj je z timeoutem narzędzia 600000 ms (albo
 7. Ustal `available_skills`: przejrzyj listę skilli dostępnych w tej sesji i wybierz pasujące do `references/delegation.md`. Ustal `tools`: czy masz przeglądarkę (wbudowaną, Chrome DevTools MCP, Playwright) i narzędzie Agent.
 8. PL: `pl = basics.json.pl_detected`, chyba że `--pl` / `--no-pl`.
 9. Zapisz `RUN/context.json`:
-   `{"url", "repo", "framework", "pages", "pl", "available_skills", "tools", "flags", "date", "notes": []}`.
+   `{"url": START_URL, "repo": ścieżka | null, "framework": str | null, "pages": [lista URL z basics.json.pages, dokładnie w tym zapisie], "pl": bool, "available_skills": [nazwy], "tools": {"agent": bool, "browser": [nazwy]}, "flags": {"quick", "pages", "only", "pl", "recheck"}, "date": "YYYY-MM-DD", "notes": []}`.
 
 ## 4. Moduły
 
@@ -68,10 +69,10 @@ Kroki 2 i 4 trwają długo: uruchamiaj je z timeoutem narzędzia 600000 ms (albo
 | code | `references/code.md` | `RUN/modules/code.json` |
 | pl | `references/pl.md` (tylko gdy `pl`) | `RUN/modules/pl.json` |
 
-Wspólne zasady modułów: `references/delegation.md` (kiedy i jak używać skilli specjalistycznych, jak tłumaczyć wyniki, głębokość), `references/finding-ids.md` (identyfikatory), schemat znaleziska w `scripts/findings.py`. Moduł wyłączony (`--only`, `--no-pl`, brak repo) → zapisz plik z `"depth": "pominięty"` i `reason`.
+Wspólne zasady modułów: `references/module-format.md` (format pliku i znaleziska, typy dowodu, problemy całej witryny, nowe identyfikatory w `new_ids`), `references/delegation.md` (kiedy i jak używać skilli specjalistycznych, głębokość), `references/finding-ids.md` (identyfikatory). Moduł wyłączony (`--only`, `--no-pl`, brak repo) → zapisz plik z `"depth": "pominięty"` i `reason` sam, bez subagenta.
 
 Uruchamianie:
-- **Pełny tryb i masz narzędzie Agent:** jeden subagent na moduł, równolegle (Lighthouse jest już policzony). Prompt subagenta: ścieżki `SKILL_DIR`, `RUN`, `REPO`; „Przeczytaj `SKILL_DIR/references/<moduł>.md`, `SKILL_DIR/references/delegation.md` i `SKILL_DIR/references/finding-ids.md`. Wykonaj instrukcję modułu na danych w RUN. Zapisz wynik do `RUN/modules/<moduł>.json`. Nie zmieniaj plików poza RUN. Odpowiedz jednym zdaniem: liczba znalezisk i głębokość.”
+- **Pełny tryb i masz narzędzie Agent:** jeden subagent na moduł, równolegle (Lighthouse jest już policzony). Wywołanie `/site-review` bez `--quick` jest prośbą użytkownika o tych subagentów. Prompt subagenta: ścieżki `SKILL_DIR`, `RUN`, `REPO`, `START_URL`; „Przeczytaj `SKILL_DIR/references/<moduł>.md`, `SKILL_DIR/references/module-format.md`, `SKILL_DIR/references/delegation.md` i `SKILL_DIR/references/finding-ids.md`. Wykonaj instrukcję modułu na danych w RUN. Zapisz wynik do `RUN/modules/<moduł>.json`. Nie zmieniaj plików poza RUN. Odpowiedz jednym zdaniem: liczba znalezisk i głębokość.”
 - **`--quick` albo brak narzędzia Agent:** wykonaj moduły po kolei w głównym wątku, w tej samej kolejności co tabela.
 
 Po zakończeniu sprawdź, że każdy oczekiwany plik modułu istnieje i jest poprawnym JSON. Brakujący → zapisz go jako `pominięty` z powodem „moduł nie zwrócił wyniku”.
@@ -87,8 +88,8 @@ Po zakończeniu sprawdź, że każdy oczekiwany plik modułu istnieje i jest pop
 
 1. Przeczytaj `RUN/report.json`. Napisz `RUN/summary.txt`: 4–5 zdań bez żargonu dla osoby nietechnicznej — jak wypada strona, co najbardziej szkodzi, 3 najważniejsze rzeczy do zrobienia (z „Zrób teraz”). Akapity oddzielaj pustą linią. Nie podawaj liczb, których nie ma w `report.json`.
 2. Dopisz do `context.json.notes` to, co czytelnik musi wiedzieć o metodzie: moduły płytkie i co by je pogłębiło („doinstaluj claude-seo”, „dodaj PSI_API_KEY”), użycie PSI, brak Chrome itd.
-3. `python3 "$SKILL_DIR/scripts/render_report.py" --run RUN --summary RUN/summary.txt` (szablon: `assets/report-template.html`).
-4. Opublikuj `RUN/report.html` narzędziem Artifact, jeśli jest dostępne (ikona `chart`, opis: „Audyt <host> — SEO, szybkość, marketing, design, kod”). Bez tego narzędzia podaj ścieżkę do pliku.
+3. `python3 "$SKILL_DIR/scripts/render_report.py" --run RUN --summary RUN/summary.txt` (szablon: `assets/report-template.html`). Powstają dwa pliki: `RUN/report.html` (pełna strona do otwarcia lokalnie) i `RUN/report.artifact.html` (ta sama treść bez `<html>`/`<head>`/`<body>`, do publikacji).
+4. Opublikuj `RUN/report.artifact.html` narzędziem Artifact, jeśli jest dostępne (ikona `chart`, opis: „Audyt <host> — SEO, szybkość, marketing, design, kod”). Bez tego narzędzia podaj ścieżkę do `RUN/report.html`.
 
 Opis wag dla użytkownika: `references/scoring.md`.
 
@@ -97,8 +98,9 @@ Opis wag dla użytkownika: `references/scoring.md`.
 W odpowiedzi do użytkownika:
 - wynik ogólny i oceny obszarów (jedna linia każdy, z głębokością),
 - 3 quick wins z `report.json.quadrants["quick win"]` (tytuł + `plik:linia`, jeśli jest),
-- przy `--recheck`: ile naprawionych / nadal / nowych,
+- przy `--recheck`: ile naprawionych / nadal / nowych / niesprawdzonych (moduł pominięty albo strona nieaudytowana w tym przebiegu),
 - co było płytkie lub pominięte i dlaczego,
+- `report.json.new_ids` (identyfikatory spoza katalogu) — zaproponuj dopisanie ich do `references/finding-ids.md`,
 - link do raportu.
 
 Zapytaj, czy naprawić te 3 quick wins — bez zgody nic nie zmieniaj. Jeśli `.site-review/` nie jest w `.gitignore` repo, zaproponuj dopisanie (nie dopisuj sam). Jeśli uruchomiłeś serwer deweloperski, zatrzymaj go albo zapytaj, czy zostawić.

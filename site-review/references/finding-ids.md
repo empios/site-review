@@ -61,6 +61,7 @@ Każde znalezisko używa `id` z tej listy. Ten sam problem zgłoszony przez kilk
 | `speed-no-compression` | brak gzip/brotli |
 | `speed-no-cache-headers` | statyczne zasoby bez cache |
 | `speed-third-party-heavy` | skrypty zewnętrzne kosztują dużo czasu |
+| `speed-redirect` | wejście na stronę przechodzi przez przekierowanie (np. bez www → www), co dodaje czas |
 
 ## Marketing i konwersja
 
@@ -69,11 +70,14 @@ Każde znalezisko używa `id` z tej listy. Ten sam problem zgłoszony przez kilk
 | `cro-value-prop-unclear` | nad zgięciem nie wiadomo, co to jest i dla kogo |
 | `cro-cta-missing` | brak głównego wezwania do działania nad zgięciem |
 | `cro-cta-weak` | CTA mało widoczne lub niejasne |
+| `cro-cta-phone-only` | główne CTA na komputerze tylko dzwoni (`tel:`), bez formularza |
+| `cro-cta-offpage-link` | CTA wyprowadza na inną stronę, choć ta ma własny formularz |
 | `cro-cta-competing` | kilka równorzędnych CTA konkuruje ze sobą |
 | `cro-mobile-cta-hidden` | na telefonie CTA poza pierwszym ekranem |
 | `cro-trust-missing` | brak sygnałów zaufania (opinie, logotypy, liczby) |
 | `cro-social-proof-missing` | brak dowodu społecznego przy decyzji |
 | `cro-contact-missing` | trudno znaleźć dane kontaktowe |
+| `cro-contact-email-private` | firmowy kontakt na prywatnej domenie poczty (gmail, yahoo…) |
 | `cro-form-too-long` | formularz ma więcej pól niż potrzeba |
 | `cro-pricing-unclear` | niejasna cena lub następny krok |
 | `cro-message-mismatch` | title/description obiecują co innego niż strona |
@@ -118,6 +122,7 @@ Każde znalezisko używa `id` z tej listy. Ten sam problem zgłoszony przez kilk
 | id | znaczenie |
 |---|---|
 | `pl-tracking-before-consent` | skrypty śledzące ładują się przed zgodą |
+| `pl-external-fonts` | fonty z zewnętrznego serwera (np. Google Fonts) ładowane przed zgodą — przekazują IP odwiedzającego |
 | `pl-cookie-banner-missing` | brak banera zgody przy cookies niekoniecznych |
 | `pl-cookie-reject-missing` | brak równie łatwej opcji „odrzuć” |
 | `pl-privacy-policy-missing` | brak linku do polityki prywatności |

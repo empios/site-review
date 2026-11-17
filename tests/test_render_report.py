@@ -107,3 +107,22 @@ class RecheckUncheckedTest(unittest.TestCase):
             report["recheck"] = {"fixed": [], "still": [], "new": [], "unchecked": [{"id": "x", "title": "x"}]}
             html = render_report.render(report, found, "S", TEMPLATE, str(run))
         self.assertIn("Nie sprawdzono: 1", html)
+
+
+class ArtifactFragmentTest(unittest.TestCase):
+    def test_cli_writes_artifact_fragment(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run, _, _ = build(tmp)
+            (run / "summary.txt").write_text("S", encoding="utf-8")
+            subprocess.run([sys.executable, str(SCRIPTS / "render_report.py"), "--run", str(run),
+                            "--summary", str(run / "summary.txt")], check=True, capture_output=True)
+            frag = (run / "report.artifact.html").read_text(encoding="utf-8")
+        low = frag.lower()
+        import re
+        self.assertNotIn("<!doctype", low)
+        self.assertIsNone(re.search(r"</?(html|head|body)[\s>]", low))
+        self.assertTrue(frag.lstrip().startswith("<title>"))
+        self.assertIn('<meta name="claude:viewport-fit-sides" content="cover">', frag)
+        self.assertIn('id="sec-method"', frag)
+        self.assertIn("color-scheme: dark", frag)
+        self.assertIn("max(16px, env(safe-area-inset-left, 0px))", frag)

@@ -49,6 +49,16 @@ class ScreenshotsTest(unittest.TestCase):
         for name, size in folds.items():
             self.assertLess(size, 300 * 1024, name)  # must fit render_report.EMBED_MAX
 
+    def test_scroll_reveal_content_is_visible(self):
+        # content revealed by IntersectionObserver must be shown before the full-page capture
+        with Server(FIXTURES / "reveal") as s, tempfile.TemporaryDirectory() as out:
+            r = subprocess.run(["bash", str(SCRIPTS / "screenshots.sh"), s.base + "/", out],
+                               capture_output=True, text=True, timeout=180)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            m = json.loads(Path(out, "metrics.json").read_text())
+        for w in ("375", "1440"):
+            self.assertEqual(m[w]["invisibleElements"], 0, w)
+
     def test_unreachable_url_fails_cleanly(self):
         with tempfile.TemporaryDirectory() as out:
             r = subprocess.run(["bash", str(SCRIPTS / "screenshots.sh"), "http://127.0.0.1:1/", out],
