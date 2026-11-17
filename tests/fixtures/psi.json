@@ -1,0 +1,1 @@
+{"loadingExperience": {"overall_category": "SLOW", "metrics": {"LARGEST_CONTENTFUL_PAINT_MS": {"percentile": 3800, "category": "AVERAGE"}, "INTERACTION_TO_NEXT_PAINT": {"percentile": 250, "category": "AVERAGE"}, "CUMULATIVE_LAYOUT_SHIFT_SCORE": {"percentile": 12, "category": "AVERAGE"}}}}
