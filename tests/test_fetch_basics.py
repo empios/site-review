@@ -83,5 +83,16 @@ class FetchBasicsTest(unittest.TestCase):
         self.assertTrue(b["errors"])
 
 
+    def test_cli_error_status_start_page_exits_4(self):
+        for code in (403, 503):
+            with Server(SITE) as s, tempfile.TemporaryDirectory() as out:
+                r = subprocess.run([sys.executable, str(SCRIPTS / "fetch_basics.py"), s.base + f"/status/{code}",
+                                    "--out", out, "--delay", "0"], capture_output=True, text=True, timeout=60)
+                b = json.loads(Path(out, "basics.json").read_text())
+            self.assertEqual(r.returncode, 4, code)
+            self.assertEqual(b["status"], code)
+            self.assertTrue(any(str(code) in e for e in b["errors"]))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import signal
 import subprocess
 import sys
 from html.parser import HTMLParser
@@ -96,18 +98,43 @@ def to_findings(diff: dict, url: str) -> list[dict]:
     return out
 
 
+def _dump_dom(url: str, timeout: int) -> subprocess.CompletedProcess:
+    """Run Chrome --dump-dom in its own process group so a timeout kills Chrome and all its children."""
+    cmd = ["bash", str(HERE / "chrome.sh"), "--headless=new", "--disable-gpu", "--virtual-time-budget=8000",
+           "--dump-dom", url]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, start_new_session=True)
+    try:
+        out, err = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        proc.communicate()
+        raise
+    return subprocess.CompletedProcess(cmd, proc.returncode, out, err)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("url")
     ap.add_argument("--raw", required=True, type=Path)
     ap.add_argument("--out", required=True, type=Path)
+    ap.add_argument("--timeout", type=int, default=120, help="seconds before giving up on Chrome")
     a = ap.parse_args(argv)
     a.out.mkdir(parents=True, exist_ok=True)
-    res = subprocess.run(["bash", str(HERE / "chrome.sh"), "--headless=new", "--disable-gpu",
-                          "--virtual-time-budget=8000", "--dump-dom", a.url],
-                         capture_output=True, text=True, timeout=120)
     result: dict
-    if res.returncode != 0 or not res.stdout.strip():
+    try:
+        res = _dump_dom(a.url, a.timeout)
+    except subprocess.TimeoutExpired:
+        res = None
+        result = {"available": False, "error": f"timeout: Chrome nie zwrócił DOM w {a.timeout} s", "findings": []}
+    except OSError as e:
+        res = None
+        result = {"available": False, "error": f"{type(e).__name__}: {e}", "findings": []}
+    if res is None:
+        pass
+    elif res.returncode != 0 or not res.stdout.strip():
         result = {"available": False, "error": (res.stderr or "pusty DOM").strip()[-500:], "findings": []}
     else:
         diff = compare(a.raw.read_text(encoding="utf-8"), res.stdout)

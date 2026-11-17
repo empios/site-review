@@ -55,27 +55,42 @@ def _rank(sev: str) -> int:
     return SEVERITIES.index(sev) if sev in SEVERITIES else len(SEVERITIES)
 
 
+# Module that owns a finding, from its id prefix. Shared ids (img-*, font-*) belong to speed.
+OWNER = {"seo": "seo", "speed": "speed", "cro": "cro", "design": "design", "a11y": "design",
+         "code": "code", "pl": "pl", "img": "speed", "font": "speed"}
+
+
+def owner(f: dict) -> str | None:
+    return OWNER.get(str(f.get("id", "")).split("-", 1)[0])
+
+
 def dedupe(findings: list[dict]) -> list[dict]:
-    merged: dict[tuple, dict] = {}
+    """Merge findings with the same (id, url).
+
+    The representative is the most severe finding that has evidence (or the most severe overall when none
+    has evidence); the module comes from the id prefix, never from which file was read first.
+    """
+    groups: dict[tuple, list[dict]] = {}
     order: list[tuple] = []
     for f in findings:
         key = (f.get("id"), f.get("url"))
-        if key not in merged:
-            merged[key] = copy.deepcopy(f)
+        if key not in groups:
+            groups[key] = []
             order.append(key)
-            continue
-        cur = merged[key]
-        tags = set(cur.get("tags") or []) | set(f.get("tags") or [])
-        sources = set(str(cur.get("source", "")).split("+")) | set(str(f.get("source", "")).split("+"))
-        if _rank(f.get("severity")) < _rank(cur.get("severity")):
-            new = copy.deepcopy(f)
-            for k in ("code_location",):
-                if k in cur and k not in new:
-                    new[k] = cur[k]
-            cur = new
-        elif "code_location" in f and "code_location" not in cur:
-            cur["code_location"] = copy.deepcopy(f["code_location"])
-        cur["tags"] = sorted(tags)
-        cur["source"] = "+".join(sorted(s for s in sources if s))
-        merged[key] = cur
-    return [merged[k] for k in order]
+        groups[key].append(f)
+    out = []
+    for key in order:
+        group = groups[key]
+        pool = [f for f in group if _has_evidence(f)] or group
+        rep = copy.deepcopy(min(pool, key=lambda f: _rank(f.get("severity"))))
+        if "code_location" not in rep:
+            loc = next((f["code_location"] for f in group if "code_location" in f), None)
+            if loc is not None:
+                rep["code_location"] = copy.deepcopy(loc)
+        rep["tags"] = sorted({t for f in group for t in (f.get("tags") or [])})
+        rep["source"] = "+".join(sorted({s for f in group for s in str(f.get("source", "")).split("+") if s}))
+        rep["module"] = owner(rep) or rep.get("module")
+        if rep.get("confidence") is not None:
+            rep["confidence"] = CONFIRMED if _has_evidence(rep) else UNVERIFIED
+        out.append(rep)
+    return out

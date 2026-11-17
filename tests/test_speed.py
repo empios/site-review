@@ -87,3 +87,23 @@ class SpeedTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CruxPublicOnlyTest(unittest.TestCase):
+    def test_is_public_url(self):
+        for u in ("http://localhost:3000/", "http://127.0.0.1:8765/", "http://192.168.1.5/", "http://10.0.0.2/",
+                  "http://[::1]/", "http://sklep.local/", "https://staging.test/", "http://intranet/",
+                  "https://app.internal/", "http://169.254.1.1/", "http://my.localhost/"):
+            self.assertFalse(crux.is_public_url(u), u)
+        for u in ("https://example.pl/", "https://www.sklep.com/produkt"):
+            self.assertTrue(crux.is_public_url(u), u)
+
+    def test_cli_refuses_private_url_even_with_key(self):
+        env = dict(os.environ, PSI_API_KEY="test-key-not-real")
+        with tempfile.TemporaryDirectory() as tmp:
+            r = subprocess.run([sys.executable, str(SCRIPTS / "crux.py"), "http://localhost:3000/", "--out", tmp],
+                               capture_output=True, text=True, env=env, timeout=30)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            c = json.loads(Path(tmp, "crux.json").read_text())
+        self.assertFalse(c["available"])
+        self.assertIn("niepubliczny", c["reason"])

@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Full-page screenshots with real device emulation via the Chrome DevTools Protocol.
 // usage: node screenshot.mjs CHROME_PATH URL OUTDIR
-// Writes OUTDIR/shot-375.png, shot-768.png, shot-1440.png, shot-375-dark.png and OUTDIR/metrics.json.
+// Writes OUTDIR/shot-375.png, shot-768.png, shot-1440.png, shot-375-dark.png (full page),
+// OUTDIR/shot-375-fold.jpg, shot-1440-fold.jpg (first screen, small enough to embed in the report)
+// and OUTDIR/metrics.json.
 // Needs Node >= 22 (built-in WebSocket). Exit 1 on failure.
 import { spawn } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
@@ -15,9 +17,9 @@ if (!chromePath || !url || !out) {
 }
 const MAX_HEIGHT = 6000;
 const SHOTS = [
-  { name: "shot-375", width: 375, height: 812, mobile: true },
+  { name: "shot-375", width: 375, height: 812, mobile: true, fold: true },
   { name: "shot-768", width: 768, height: 1024, mobile: true },
-  { name: "shot-1440", width: 1440, height: 900, mobile: false },
+  { name: "shot-1440", width: 1440, height: 900, mobile: false, fold: true },
   { name: "shot-375-dark", width: 375, height: 812, mobile: true, dark: true },
 ];
 
@@ -115,6 +117,12 @@ async function main() {
       clip: { x: 0, y: 0, width: s.width, height, scale: 1 },
     });
     writeFileSync(join(out, `${s.name}.png`), Buffer.from(shot.data, "base64"));
+    if (s.fold) {
+      const fold = await cdp.send("Page.captureScreenshot", {
+        format: "jpeg", quality: 70, clip: { x: 0, y: 0, width: s.width, height: s.height, scale: 1 },
+      });
+      writeFileSync(join(out, `${s.name}-fold.jpg`), Buffer.from(fold.data, "base64"));
+    }
     if (!s.dark) {
       metrics[String(s.width)] = {
         innerWidth: m.iw, scrollWidth: m.sw, pageHeight: m.sh, horizontalScroll: m.sw > m.iw + 1,

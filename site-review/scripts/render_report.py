@@ -162,7 +162,8 @@ def _recheck(report: dict) -> str:
     return ('<section id="sec-recheck"><h2>Zmiany od poprzedniego audytu</h2><div class="chips">'
             f'<span class="chip s-good">Naprawione: {len(rc.get("fixed") or [])}</span>'
             f'<span class="chip">Nadal: {len(rc.get("still") or [])}</span>'
-            f'<span class="chip s-bad">Nowe: {len(rc.get("new") or [])}</span></div>'
+            f'<span class="chip s-bad">Nowe: {len(rc.get("new") or [])}</span>'
+            f'<span class="chip">Nie sprawdzono: {len(rc.get("unchecked") or [])}</span></div>'
             + (f"<ul>{fixed}</ul>" if fixed else "") + "</section>")
 
 

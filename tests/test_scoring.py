@@ -72,3 +72,35 @@ class ScoringTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RecheckScopeTest(unittest.TestCase):
+    def test_skipped_module_is_unchecked_not_fixed(self):
+        prev = [f("speed-lcp-mobile", module="speed")]
+        d = recheck.diff(prev, [], skipped_modules={"speed"})
+        self.assertEqual(d["fixed"], [])
+        self.assertEqual([x["id"] for x in d["unchecked"]], ["speed-lcp-mobile"])
+
+    def test_page_not_audited_is_unchecked(self):
+        prev = [f("seo-noindex", url="https://e.com/o-nas"), f("seo-canonical-missing", url="https://e.com/")]
+        d = recheck.diff(prev, [], audited_urls={"https://e.com/"})
+        self.assertEqual([x["id"] for x in d["fixed"]], ["seo-canonical-missing"])
+        self.assertEqual([x["id"] for x in d["unchecked"]], ["seo-noindex"])
+
+    def test_merge_cli_uses_skipped_modules_and_pages(self):
+        import json, shutil, subprocess, sys, tempfile
+        from pathlib import Path
+        from tests.helpers import FIXTURES, SCRIPTS
+        with tempfile.TemporaryDirectory() as tmp:
+            run = Path(tmp, "run")
+            shutil.copytree(FIXTURES / "run1", run)
+            prev = Path(tmp, "prev.json")
+            prev.write_text(json.dumps([
+                {"id": "code-secret-in-client", "module": "code", "url": "https://example.com/"},
+                {"id": "seo-noindex", "module": "seo", "url": "https://example.com/inna"},
+                {"id": "seo-title-missing", "module": "seo", "url": "https://example.com/"}]))
+            subprocess.run([sys.executable, str(SCRIPTS / "merge_findings.py"), "--run", str(run), "--prev", str(prev)],
+                           check=True, capture_output=True)
+            rc = json.loads((run / "report.json").read_text())["recheck"]
+        self.assertEqual([x["id"] for x in rc["fixed"]], ["seo-title-missing"])
+        self.assertEqual(sorted(x["id"] for x in rc["unchecked"]), ["code-secret-in-client", "seo-noindex"])

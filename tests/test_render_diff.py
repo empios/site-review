@@ -41,3 +41,30 @@ class RenderDiffTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RenderDiffCliTest(unittest.TestCase):
+    def test_chrome_hang_writes_unavailable(self):
+        import json, os, subprocess, sys, tempfile
+        from pathlib import Path
+        from tests.helpers import SCRIPTS
+        with tempfile.TemporaryDirectory() as tmp:
+            fake = Path(tmp, "fake-chrome")
+            marker = Path(tmp, "child.pid")
+            fake.write_text(f"#!/bin/bash\nsleep 30 &\necho $! > {marker}\nwait\n")
+            fake.chmod(0o755)
+            raw = Path(tmp, "raw.html")
+            raw.write_text(RAW)
+            env = dict(os.environ, CHROME_PATH=str(fake))
+            r = subprocess.run([sys.executable, str(SCRIPTS / "render_diff.py"), "https://e.com/", "--raw", str(raw),
+                                "--out", tmp, "--timeout", "2"], capture_output=True, text=True, env=env, timeout=60)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            res = json.loads(Path(tmp, "render_diff.json").read_text())
+            child = int(marker.read_text())
+            import time
+            time.sleep(0.5)
+            alive = subprocess.run(["kill", "-0", str(child)], capture_output=True).returncode == 0
+        self.assertFalse(alive, "Chrome child process left running after timeout")
+        self.assertFalse(res["available"])
+        self.assertIn("timeout", res["error"])
+        self.assertEqual(res["findings"], [])

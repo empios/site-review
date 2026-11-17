@@ -2,14 +2,14 @@
 
 ## Instrukcja dla subagenta
 
-Wejście: zrzuty `RUN/shots/<n>/shot-375.png`, `shot-1440.png` dla każdej strony, `basics.json` (title, description, og, linki), `speed.json` → `trackers_before_consent` (obecność analityki), surowe HTML.
+Wejście: zrzuty `RUN/shots/<n>/shot-375.png`, `shot-1440.png` (cała strona — do oceny) i `shot-375-fold.jpg`, `shot-1440-fold.jpg` (pierwszy ekran — do dowodu w raporcie) dla każdej strony, `basics.json` (title, description, og, linki), `speed.json` → `trackers_before_consent` (obecność analityki), surowe HTML.
 
 1. Najpierw ustal cel strony z treści (sprzedaż, zapis, kontakt, pobranie, informacja) i wpisz go w `reason`. Bez celu nie da się ocenić konwersji.
 2. Jeśli jest skill z sekcji Delegacja — użyj go na zrzutach i treści strony głównej oraz najważniejszej strony docelowej; wyniki przetłumacz według `references/delegation.md`. Głębokość `pełny`.
 3. W przeciwnym razie przejdź checklistę. Głębokość `płytki`.
 4. Zapisz `RUN/modules/cro.json`.
 
-Zasady: dowodem jest zrzut ekranu (`evidence.type = "screenshot"`, `evidence.path` = ścieżka względem `RUN`) plus opis tego, co na nim widać, albo cytat z HTML. Nie wysyłaj formularzy, licz pola w HTML. Unikaj ogólników („popraw copy”): napisz, co konkretnie zmienić i gdzie. Pisz dla właściciela strony, bez żargonu.
+Zasady: dowodem jest zrzut ekranu (`evidence.type = "screenshot"`, `evidence.path` = ścieżka względem `RUN`, najlepiej `shots/<n>/shot-375-fold.jpg` lub `shot-1440-fold.jpg` — tylko te lekkie pliki osadzają się w raporcie) plus opis tego, co na nim widać, albo cytat z HTML. Nie wysyłaj formularzy, licz pola w HTML. Unikaj ogólników („popraw copy”): napisz, co konkretnie zmienić i gdzie. Pisz dla właściciela strony, bez żargonu.
 
 ## Delegacja
 

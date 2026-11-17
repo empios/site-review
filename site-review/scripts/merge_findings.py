@@ -43,6 +43,12 @@ def merge(run: Path, repo: str | None, prev: Path | None) -> dict:
             quadrants[f["quadrant"]].append(f["id"])
 
     prev_list = json.loads(prev.read_text(encoding="utf-8")) if prev and prev.is_file() else None
+    skipped = {m for m, v in modules.items() if v["depth"] == scoring.SKIPPED}
+    audited = None
+    ctx_path = run / "context.json"
+    if ctx_path.is_file():
+        pages = json.loads(ctx_path.read_text(encoding="utf-8")).get("pages")
+        audited = set(pages) if pages else None
     report = {
         "scores": scores,
         "overall": scoring.overall(scores),
@@ -50,7 +56,7 @@ def merge(run: Path, repo: str | None, prev: Path | None) -> dict:
         "quadrants": quadrants,
         "unverified": [f for f in merged if f["confidence"] != fnd.CONFIRMED],
         "invalid": invalid,
-        "recheck": recheck.diff(prev_list, merged) if prev_list is not None else None,
+        "recheck": recheck.diff(prev_list, merged, skipped, audited) if prev_list is not None else None,
         "modules": modules,
     }
     (run / "findings.json").write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")

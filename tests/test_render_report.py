@@ -98,3 +98,12 @@ class RenderReportTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RecheckUncheckedTest(unittest.TestCase):
+    def test_unchecked_count_shown(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run, report, found = build(tmp)
+            report["recheck"] = {"fixed": [], "still": [], "new": [], "unchecked": [{"id": "x", "title": "x"}]}
+            html = render_report.render(report, found, "S", TEMPLATE, str(run))
+        self.assertIn("Nie sprawdzono: 1", html)

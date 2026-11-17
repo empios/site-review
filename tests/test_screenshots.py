@@ -42,7 +42,12 @@ class ScreenshotsTest(unittest.TestCase):
                                capture_output=True, text=True, timeout=180)
             self.assertEqual(r.returncode, 0, r.stderr)
             m = json.loads(Path(out, "metrics.json").read_text())
+            folds = {n: Path(out, n).stat().st_size for n in ("shot-375-fold.jpg", "shot-1440-fold.jpg")
+                     if Path(out, n).is_file()}
         self.assertGreater(m["375"]["innerWidth"], 375)
+        self.assertEqual(sorted(folds), ["shot-1440-fold.jpg", "shot-375-fold.jpg"])
+        for name, size in folds.items():
+            self.assertLess(size, 300 * 1024, name)  # must fit render_report.EMBED_MAX
 
     def test_unreachable_url_fails_cleanly(self):
         with tempfile.TemporaryDirectory() as out:

@@ -57,3 +57,17 @@ class ReferencesTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LighthouseAuditNamesTest(unittest.TestCase):
+    """Every Lighthouse audit named in the references (written as `lh:<audit-id>`) must exist in LH 13 output."""
+
+    def test_named_audits_exist_in_lighthouse_13(self):
+        import json
+        from tests.helpers import FIXTURES
+        known = set(json.loads((FIXTURES / "lh" / "lh13-audit-ids.json").read_text()))
+        named = set()
+        for name in ("speed", "design", "seo", "cro", "code", "pl"):
+            named |= set(re.findall(r"`lh:([a-z0-9-]+)`", (REF / f"{name}.md").read_text(encoding="utf-8")))
+        self.assertGreaterEqual(len(named), 12)
+        self.assertEqual(sorted(named - known), [])

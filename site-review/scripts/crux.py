@@ -7,6 +7,7 @@ Only for public URLs: the URL is sent to Google.
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import json
 import os
 import sys
@@ -15,6 +16,25 @@ import urllib.request
 from pathlib import Path
 
 API = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
+
+
+PRIVATE_SUFFIXES = (".local", ".localhost", ".test", ".internal", ".lan", ".home", ".corp", ".invalid", ".example")
+
+
+def is_public_url(url: str) -> bool:
+    """True only for http(s) URLs on public hostnames — never send private addresses to Google."""
+    p = urllib.parse.urlparse(url)
+    host = (p.hostname or "").lower().rstrip(".")
+    if p.scheme not in ("http", "https") or not host or host == "localhost":
+        return False
+    try:
+        ip = ipaddress.ip_address(host)
+        return ip.is_global
+    except ValueError:
+        pass
+    if "." not in host or host.endswith(PRIVATE_SUFFIXES):
+        return False
+    return True
 
 
 def parse_psi(psi: dict) -> dict:
@@ -40,7 +60,9 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     a.out.mkdir(parents=True, exist_ok=True)
     key = os.environ.get("PSI_API_KEY")
-    if not key:
+    if not is_public_url(a.url):
+        res = {"available": False, "reason": "adres niepubliczny — nie wysyłam go do Google"}
+    elif not key:
         res = {"available": False, "reason": "brak klucza PSI_API_KEY"}
     else:
         q = urllib.parse.urlencode({"url": a.url, "key": key, "strategy": "mobile", "category": "performance"})

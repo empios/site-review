@@ -2,7 +2,8 @@
 """Fetch the basics of a site: redirects, headers, robots.txt, sitemap, page meta.
 
 Usage: fetch_basics.py URL --out DIR [--pages 5] [--delay 1]
-Writes DIR/basics.json and raw HTML into DIR/raw/. Exit 2 when the start URL is unreachable.
+Writes DIR/basics.json and raw HTML into DIR/raw/.
+Exit 2 when the start URL is unreachable, 4 when it answers with an HTTP error (4xx/5xx, e.g. a WAF block).
 """
 from __future__ import annotations
 
@@ -161,6 +162,8 @@ def collect(url: str, out: Path, pages: int = 5, delay: float = DELAY) -> dict:
     if first["error"] or first["status"] is None:
         errors.append(f"start: {first['error']}")
         return basics
+    if first["status"] >= 400:
+        errors.append(f"start: HTTP {first['status']} (strona startowa zwraca błąd — może to blokada botów/WAF)")
     final = first["chain"][-1]
     origin = "{0.scheme}://{0.netloc}".format(urllib.parse.urlparse(final))
 
@@ -222,7 +225,9 @@ def main(argv=None) -> int:
     b = collect(a.url, a.out, a.pages, a.delay)
     (a.out / "basics.json").write_text(json.dumps(b, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps({"status": b["status"], "pages": len(b["pages"]), "errors": b["errors"]}, ensure_ascii=False))
-    return 2 if b["status"] is None else 0
+    if b["status"] is None:
+        return 2
+    return 4 if b["status"] >= 400 else 0
 
 
 if __name__ == "__main__":

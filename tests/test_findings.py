@@ -69,3 +69,30 @@ class FindingsTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DedupeOwnershipTest(unittest.TestCase):
+    def test_module_from_id_prefix_not_file_order(self):
+        pl = make(id="seo-lang-missing", module="pl", tags=["pl"], severity="medium")
+        seo = make(id="seo-lang-missing", module="seo", tags=["seo"], severity="medium")
+        for order in ([pl, seo], [seo, pl]):
+            out = findings.dedupe(order)
+            self.assertEqual(out[0]["module"], "seo")
+            self.assertEqual(out[0]["tags"], ["pl", "seo"])
+
+    def test_shared_image_id_owned_by_speed(self):
+        code = make(id="img-oversized", module="code", tags=["code"], severity="high")
+        design = make(id="img-oversized", module="design", tags=["design"], severity="medium")
+        self.assertEqual(findings.dedupe([code, design])[0]["module"], "speed")
+
+    def test_evidenced_version_wins_over_unproven_higher_severity(self):
+        proven = make(severity="medium")
+        unproven = make(severity="critical")
+        del unproven["evidence"]
+        out = findings.dedupe([proven, unproven])[0]
+        self.assertEqual(out["severity"], "medium")
+        self.assertEqual(out["evidence"], proven["evidence"])
+
+    def test_unknown_prefix_keeps_reported_module(self):
+        f = make(id="custom-thing", module="cro", tags=["cro"])
+        self.assertEqual(findings.dedupe([f, dict(f)])[0]["module"], "cro")

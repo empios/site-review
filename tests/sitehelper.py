@@ -15,6 +15,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_header("Location", "/loop")
             self.end_headers()
             return
+        if self.path.startswith("/status/"):
+            code = int(self.path.split("/")[2])
+            body = b"<html><head><title>Blocked</title></head><body>Access denied</body></html>"
+            self.send_response(code)
+            self.send_header("Content-Type", "text/html")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
         p = self.path.split("?")[0]
         if p not in ("/",) and "." not in Path(p).name:
             self.path = p + ".html"

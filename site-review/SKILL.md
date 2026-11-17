@@ -42,12 +42,15 @@ Tryby:
 
 ## 3. Rozpoznanie (główny wątek, sekwencyjnie)
 
-1. `python3 "$SKILL_DIR/scripts/fetch_basics.py" URL --out RUN --pages N` (`--quick` → `--pages 1`).
-   Kod wyjścia 2 = strona nieosiągalna: przerwij, pokaż `basics.json.errors` i zakończ (bez raportu).
-2. Zrzuty dla każdej strony `i` z `basics.json.pages`: `bash "$SKILL_DIR/scripts/screenshots.sh" PAGE_URL RUN/shots/i`. Kod 3 = brak Chrome → zanotuj, design i CRO będą `płytki`.
+Kroki 2 i 4 trwają długo: uruchamiaj je z timeoutem narzędzia 600000 ms (albo w tle i poczekaj na koniec). Domyślny limit 2 min przerwie je w połowie.
+
+1. `python3 "$SKILL_DIR/scripts/fetch_basics.py" URL --out RUN --pages N` (`--quick` → `--pages 1`). Adres bez `http(s)://` uzupełnij o `https://`.
+   - Kod wyjścia 2 = strona nieosiągalna. Kod wyjścia 4 = strona startowa zwraca błąd HTTP (4xx/5xx, często blokada botów/WAF albo przerwa techniczna). W obu przypadkach pokaż użytkownikowi status i `basics.json.errors`. Nie oceniaj treści strony błędu jak strony właściwej.
+   - Bez repo: zakończ bez raportu. Z repo: zaproponuj audyt samego kodu — wtedy seo, speed, cro, design i pl zapisz jako `pominięty` z powodem „strona startowa zwróciła <status>” i przejdź do modułu `code`.
+2. Zrzuty dla każdej strony `i` z `basics.json.pages`: `bash "$SKILL_DIR/scripts/screenshots.sh" PAGE_URL RUN/shots/i` (pełne strony PNG, pierwsze ekrany `-fold.jpg` do raportu, `metrics.json` z prawdziwą szerokością widoku). Kod 3 = brak Chrome lub Node 22+ → zanotuj, design i CRO będą `płytki`.
 3. `python3 "$SKILL_DIR/scripts/render_diff.py" START_URL --raw RUN/raw/page-0.html --out RUN` (tylko strona startowa).
-4. `bash "$SKILL_DIR/scripts/lighthouse_runs.sh" START_URL RUN` (6 przebiegów, ~2–4 min, nigdy równolegle z innymi pomiarami), potem `python3 "$SKILL_DIR/scripts/lh_median.py" RUN --url START_URL`.
-5. `python3 "$SKILL_DIR/scripts/crux.py" START_URL --out RUN` (bez klucza zapisze `available: false` — to normalne).
+4. `bash "$SKILL_DIR/scripts/lighthouse_runs.sh" START_URL RUN` (6 przebiegów, ~2–4 min, przy pierwszym uruchomieniu dłużej przez pobranie Lighthouse; nigdy równolegle z innymi pomiarami). Potem ZAWSZE `python3 "$SKILL_DIR/scripts/lh_median.py" RUN --url START_URL` — także gdy `lighthouse_runs.sh` zakończył się błędem: liczy medianę z udanych przebiegów albo oznacza szybkość jako `pominięty` z powodem.
+5. Tylko dla publicznego adresu: `python3 "$SKILL_DIR/scripts/crux.py" START_URL --out RUN` (sam odmówi dla localhost i adresów prywatnych; bez klucza zapisze `available: false` — to normalne).
 6. Repo: framework przez `route_map.detect_framework` (`python3 -c "import sys; sys.path.insert(0, '$SKILL_DIR/scripts'); import route_map; print(route_map.detect_framework('REPO'))"`).
 7. Ustal `available_skills`: przejrzyj listę skilli dostępnych w tej sesji i wybierz pasujące do `references/delegation.md`. Ustal `tools`: czy masz przeglądarkę (wbudowaną, Chrome DevTools MCP, Playwright) i narzędzie Agent.
 8. PL: `pl = basics.json.pl_detected`, chyba że `--pl` / `--no-pl`.
