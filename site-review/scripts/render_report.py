@@ -113,6 +113,43 @@ def _top(report: dict, emb: _Embedder) -> str:
     return '<ol class="top">' + "".join(_finding(f, emb, "li") for f in items) + "</ol>"
 
 
+PAGE_MODULES = ("seo", "speed", "cro", "design", "pl")  # code is repo-wide, not per page
+
+
+SHORT_NAMES = {"seo": "SEO", "speed": "Szybkość", "cro": "Marketing", "design": "Design", "pl": "PL"}
+CELL = {"bez uwag": ("✓", "s-good"), "nie sprawdzono": ("–", "s-warn"), "pominięty": ("pominięty", "muted")}
+
+
+def _cell(v) -> str:
+    if isinstance(v, int):
+        return f'<td class="num"><b>{v}</b></td>'
+    sym, cls = CELL.get(v, (v, "muted"))
+    return f'<td class="{cls}" title="{e(v)}">{e(sym)}</td>'
+
+
+def _pages(report: dict) -> str:
+    rows = report.get("pages") or []
+    if not rows:
+        return '<p class="muted">Brak danych o podstronach.</p>'
+    head = "".join(f"<th>{e(SHORT_NAMES[m])}</th>" for m in PAGE_MODULES)
+    body = []
+    for p in rows:
+        lh = p.get("lighthouse") or {}
+        lcp = f"{lh['lcp_ms'] / 1000:.1f} s".replace(".", ",") if lh.get("lcp_ms") is not None else "—"
+        a11y = e(lh.get("accessibility")) if lh.get("accessibility") is not None else "—"
+        title = f'<br><span class="muted">{e(p.get("title"))}</span>' if p.get("title") else ""
+        cells = "".join(_cell((p.get("modules") or {}).get(m, "nie sprawdzono")) for m in PAGE_MODULES)
+        path = urlparse(p.get("url") or "").path or "/"
+        body.append(f"<tr><td class=\"page\"><code title=\"{e(p.get('url'))}\">{e(path)}</code>{title}</td>"
+                    f"<td>{e(p.get('status') or '—')}</td>"
+                    f"<td>{e(lcp)}</td><td>{a11y}</td>{cells}</tr>")
+    return ('<p class="muted">Liczba — potwierdzone znaleziska na tej stronie; ✓ — bez uwag (strona sprawdzona, '
+            'nic nie znaleziono); – — nie sprawdzono (moduł tej strony nie ocenił). Problemy całej witryny są '
+            'liczone przy stronie startowej.</p>'
+            '<div class="table-wrap"><table class="pages"><thead><tr><th>Strona</th><th>Status</th><th>LCP (mobile)</th>'
+            f'<th>Dostępność</th>{head}</tr></thead><tbody>{"".join(body)}</tbody></table></div>')
+
+
 def _modules(findings: list[dict], emb: _Embedder) -> str:
     out = []
     confirmed = [f for f in findings if f.get("confidence") == "potwierdzone"]
@@ -182,6 +219,7 @@ def render(report: dict, findings: list[dict], summary: str, template: str, run_
         "recheck": _recheck(report),
         "scorecards": _scorecards(report),
         "top": _top(report, emb),
+        "pages": _pages(report),
         "modules": _modules(findings, emb),
         "unverified": _unverified(report, emb),
         "method": _method(report, ctx),

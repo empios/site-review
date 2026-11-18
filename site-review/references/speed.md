@@ -6,9 +6,9 @@ Format wyniku i zasady wspólne (pola znaleziska, typy dowodu, problemy całej w
 
 Wejście: `RUN/speed.json` (mediany Lighthouse mobile/desktop, gotowe znaleziska progowe, `lh_scores`), surowe raporty `RUN/lh-*.json`, `RUN/crux.json` (dane od prawdziwych użytkowników, jeśli był klucz), `basics.json` (nagłówki).
 
-1. Weź `speed.json` → `findings`. Nie zmieniaj `id`, `severity`, `impact` ani `evidence` (progi liczy kod, nie model). Pole `fix` przepisz na konkretną poprawkę dla tej strony — np. dla LCP sprawdź w `lh:lcp-breakdown-insight`, czym jest element LCP (obraz, tekst, wideo) i która faza go opóźnia.
+1. Weź `findings` z `RUN/speed.json` (strona startowa, 3+3 przebiegi) i z każdego `RUN/pages/<i>/speed.json` (podstrony, 1 przebieg mobile — wynik mniej stabilny, zaznacz to w dowodzie, jeśli wartość jest blisko progu). Przejdź każdą stronę z `RUN/pages.json` i wpisz ocenione adresy do `pages_checked` (`references/module-format.md`). Nie zmieniaj `id`, `severity`, `impact` ani `evidence` (progi liczy kod, nie model). Pole `fix` przepisz na konkretną poprawkę dla tej strony — np. dla LCP sprawdź w `lh:lcp-breakdown-insight`, czym jest element LCP (obraz, tekst, wideo) i która faza go opóźnia.
 2. Jeśli `speed.json.depth == "pominięty"`, zapisz moduł jako `pominięty` z tym samym `reason` i zakończ.
-3. Z raportu mediany mobile (plik z `speed.json` → `median_run_file.mobile`) odczytaj audyty z checklisty (`lh:<id>` to klucz w `audits`; w Lighthouse 13 większość diagnostyk to audyty `*-insight`, liczby są w `details`) i dodaj znaleziska z liczbami jako dowód.
+3. Dla każdej strony z raportu mediany mobile (strona startowa: plik z `speed.json` → `median_run_file.mobile`; podstrona: `RUN/pages/<i>/lh-mobile-1.json`) odczytaj audyty z checklisty (`lh:<id>` to klucz w `audits`; w Lighthouse 13 większość diagnostyk to audyty `*-insight`, liczby są w `details`) i dodaj znaleziska z liczbami jako dowód.
 4. Jeśli `crux.json.available`, porównaj p75 z progami (LCP 2500/4000 ms, INP 200/500 ms, CLS 0.1/0.25) i dodaj `speed-field-poor` dla kategorii słabej. W raporcie zawsze rozróżniaj dane laboratoryjne (Lighthouse) i terenowe (CrUX).
 5. Zapisz `RUN/modules/speed.json`. Głębokość: `pełny`, gdy Lighthouse się udał (z delegacją lub bez).
 

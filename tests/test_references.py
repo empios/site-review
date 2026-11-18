@@ -116,3 +116,14 @@ class RecheckStabilityDocsTest(unittest.TestCase):
     def test_no_inline_module_templates_without_format_ref(self):
         seo = (REF / "seo.md").read_text(encoding="utf-8")
         self.assertNotIn('`{"module": "seo", "depth": ..., "reason": ..., "findings": [...]}`', seo)
+
+
+class SubpageCoverageDocsTest(unittest.TestCase):
+    def test_modules_walk_every_page(self):
+        for name in ("seo", "speed", "cro", "design", "pl"):
+            text = (REF / f"{name}.md").read_text(encoding="utf-8")
+            self.assertIn("pages.json", text, name)
+            self.assertIn("pages_checked", text, name)
+
+    def test_module_format_documents_pages_checked(self):
+        self.assertIn("`pages_checked`", (REF / "module-format.md").read_text(encoding="utf-8"))

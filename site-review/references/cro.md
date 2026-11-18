@@ -6,6 +6,7 @@ Format wyniku i zasady wspólne (pola znaleziska, typy dowodu, problemy całej w
 
 Wejście: zrzuty `RUN/shots/<n>/shot-375.png`, `shot-1440.png` (cała strona — do oceny) i `shot-375-fold.jpg`, `shot-1440-fold.jpg` (pierwszy ekran — do dowodu w raporcie) dla każdej strony, `basics.json` (title, description, og, linki), `speed.json` → `analytics_detected` (analityka wykryta w ruchu sieciowym, także własna, np. Vercel Analytics), surowe HTML.
 
+0. Przejdź każdą stronę z `RUN/pages.json` i wpisz ocenione adresy do `pages_checked` (`references/module-format.md`). Każda podstrona ma własny cel i własne wezwanie do działania — oceń je osobno (zrzuty `RUN/shots/<i>/`).
 1. Najpierw ustal cel strony z treści (sprzedaż, zapis, kontakt, pobranie, informacja) i wpisz go w `reason`. Bez celu nie da się ocenić konwersji.
 2. Jeśli jest skill z sekcji Delegacja — użyj go na zrzutach i treści strony głównej oraz najważniejszej strony docelowej; wyniki przetłumacz według `references/delegation.md`. Głębokość `pełny`.
 3. W przeciwnym razie przejdź checklistę. Głębokość `płytki`.

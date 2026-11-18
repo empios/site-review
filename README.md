@@ -9,7 +9,7 @@ Skill dla [Claude Code](https://claude.com/claude-code), który robi audyt stron
 | obszar | co konkretnie | źródło danych |
 |---|---|---|
 | **SEO i indeksacja** | statusy i przekierowania, `robots.txt`, sitemap, `noindex`, canonical, title/description/H1, hreflang, dane strukturalne, treść widoczna dopiero po JS | pobranie stron, porównanie HTML surowego z wyrenderowanym |
-| **Szybkość** | LCP, CLS, TBT (mobile i desktop), blokujące zasoby, obrazy, cache, skrypty zewnętrzne; dane od prawdziwych użytkowników (CrUX), jeśli jest klucz | Lighthouse 13, 3 przebiegi, mediana |
+| **Szybkość** | LCP, CLS, TBT (mobile i desktop), blokujące zasoby, obrazy, cache, skrypty zewnętrzne; dane od prawdziwych użytkowników (CrUX), jeśli jest klucz | Lighthouse 13 na każdej stronie (startowa: 3 przebiegi i mediana, podstrony: 1) |
 | **Marketing i konwersja** | czy pierwszy ekran mówi, co to i dla kogo, wezwania do działania, sygnały zaufania, formularze, analityka | zrzuty ekranu z emulacji telefonu i komputera |
 | **Design i dostępność** | kontrast, teksty alternatywne, wielkość elementów dotykowych, focus, przewijanie poziome, viewport, czytelność | Lighthouse (axe-core), zrzuty 375/768/1440 px, przeglądarka |
 | **Kod** (gdy podasz repo) | renderowanie stron ważnych dla SEO, metadane we frameworku, obrazy, rozmiar bundla, podatne zależności, nagłówki bezpieczeństwa, sekrety w kodzie klienta | pliki repo |
@@ -26,10 +26,10 @@ flowchart LR
   C --> D[Raport HTML]
 ```
 
-1. **Rozpoznanie** — skrypty pobierają strony (z poszanowaniem `robots.txt`), robią zrzuty z prawdziwą emulacją urządzenia, uruchamiają Lighthouse i porównują HTML przed i po JavaScripcie.
+1. **Rozpoznanie** — skrypty pobierają strony (z poszanowaniem `robots.txt`), robią zrzuty z prawdziwą emulacją urządzenia, uruchamiają Lighthouse i porównują HTML przed i po JavaScripcie — na każdej wybranej stronie, nie tylko na głównej.
 2. **Moduły** — dla każdego obszaru model ocenia dane według checklisty w `references/`. Jeśli w sesji jest zainstalowany specjalistyczny skill (np. `claude-seo`, `marketingskills`, `design:design-critique`), moduł z niego korzysta i jest oznaczony jako „pełny”; bez niego — „płytki”.
 3. **Scalanie i ocena** — skrypty walidują znaleziska, łączą duplikaty, liczą oceny i priorytety. Liczby liczy kod, nie model, więc ta sama strona dostaje ten sam wynik.
-4. **Raport** — jedna strona HTML: streszczenie dla osoby nietechnicznej, oceny obszarów, „Zrób teraz”, szczegóły z dowodami i metodologia.
+4. **Raport** — jedna strona HTML: streszczenie dla osoby nietechnicznej, oceny obszarów, „Zrób teraz”, tabela „Strony” (pomiary każdej podstrony i to, który obszar ją sprawdził), szczegóły z dowodami i metodologia.
 
 Zasady, które trzymają raport w ryzach:
 
@@ -112,7 +112,7 @@ Testy zrzutów ekranu uruchamiają się, gdy są dostępne Chrome i Node 22+; be
 ## Ograniczenia
 
 - Strony za logowaniem nie są audytowane.
-- Lighthouse i porównanie HTML działają na stronie startowej, zrzuty na wszystkich wybranych podstronach.
+- Podstrony dostają jeden przebieg Lighthouse (strona startowa trzy), więc ich wyniki szybkości są mniej stabilne.
 - Bez zewnętrznych skilli SEO i marketing są oceniane krótszymi checklistami („płytko”).
 - Mapowanie na kod rozumie trasy Next.js, Astro, SvelteKit i Nuxt; dla innych frameworków zostaje wyszukiwanie tekstu.
 

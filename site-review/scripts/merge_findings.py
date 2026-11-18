@@ -17,14 +17,39 @@ import recheck  # noqa: E402
 import scoring  # noqa: E402
 
 
+def page_coverage(run: Path, merged: list[dict], modules: dict, checked: dict) -> list[dict]:
+    """Per page and module: number of confirmed findings, "bez uwag" (checked, clean), "nie sprawdzono", "pominięty"."""
+    ctx_path, pages_path = run / "context.json", run / "pages.json"
+    ctx = json.loads(ctx_path.read_text(encoding="utf-8")) if ctx_path.is_file() else {}
+    measured = {recheck.normalize_url(p.get("url")): p
+                for p in (json.loads(pages_path.read_text(encoding="utf-8")) if pages_path.is_file() else [])}
+    urls = ctx.get("pages") or [p.get("url") for p in measured.values()]
+    confirmed = [f for f in merged if f.get("confidence") == fnd.CONFIRMED]
+    out = []
+    for url in urls:
+        key = recheck.normalize_url(url)
+        info = measured.get(key, {})
+        row = {"url": url, "title": info.get("title"), "status": info.get("status"),
+               "lighthouse": info.get("lighthouse"), "mobile": info.get("mobile"), "modules": {}}
+        for m in fnd.MODULES:
+            if modules.get(m, {}).get("depth") == scoring.SKIPPED:
+                row["modules"][m] = "pominięty"
+                continue
+            n = sum(1 for f in confirmed if f.get("module") == m and recheck.normalize_url(f.get("url")) == key)
+            row["modules"][m] = n if n else ("bez uwag" if key in checked.get(m, set()) else "nie sprawdzono")
+        out.append(row)
+    return out
+
+
 def merge(run: Path, repo: str | None, prev: Path | None) -> dict:
-    modules, raw, invalid, new_ids = {}, [], [], {}
+    modules, raw, invalid, new_ids, checked = {}, [], [], {}, {}
     for path in sorted((run / "modules").glob("*.json")):
         data = json.loads(path.read_text(encoding="utf-8"))
         name = data.get("module") or path.stem
         modules[name] = {"depth": data.get("depth", scoring.SKIPPED), "reason": data.get("reason")}
         if data.get("new_ids"):
             new_ids[name] = sorted(set(data["new_ids"]))
+        checked[name] = {recheck.normalize_url(u) for u in data.get("pages_checked") or []}
         for f in data.get("findings") or []:
             errs = fnd.validate(f)
             if errs:
@@ -61,6 +86,7 @@ def merge(run: Path, repo: str | None, prev: Path | None) -> dict:
         pages = json.loads(ctx_path.read_text(encoding="utf-8")).get("pages")
         audited = set(pages) if pages else None
     report = {
+        "pages": page_coverage(run, merged, modules, checked),
         "scores": scores,
         "overall": scoring.overall(scores),
         "top": scoring.top(merged),

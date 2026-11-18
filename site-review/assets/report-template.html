@@ -64,6 +64,10 @@ table { width: 100%; border-collapse: collapse; font-size: .9rem; }
 th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top;
   overflow-wrap: anywhere; }
 .table-wrap { overflow-x: auto; }
+td.num { font-variant-numeric: tabular-nums; }
+table.pages { min-width: 640px; }
+table.pages th, table.pages td { overflow-wrap: normal; white-space: nowrap; }
+table.pages td.page { white-space: normal; min-width: 200px; overflow-wrap: anywhere; }
 </style>
 </head>
 <body>
@@ -88,6 +92,11 @@ th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--bord
 <section id="sec-top">
   <h2>Zrób teraz</h2>
   {{top}}
+</section>
+
+<section id="sec-pages">
+  <h2>Strony</h2>
+  {{pages}}
 </section>
 
 <section id="sec-modules">
