@@ -115,3 +115,7 @@ Testy zrzutów ekranu uruchamiają się, gdy są dostępne Chrome i Node 22+; be
 - Lighthouse i porównanie HTML działają na stronie startowej, zrzuty na wszystkich wybranych podstronach.
 - Bez zewnętrznych skilli SEO i marketing są oceniane krótszymi checklistami („płytko”).
 - Mapowanie na kod rozumie trasy Next.js, Astro, SvelteKit i Nuxt; dla innych frameworków zostaje wyszukiwanie tekstu.
+
+## Licencja
+
+[MIT](LICENSE)
