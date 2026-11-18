@@ -41,5 +41,44 @@ class MergeTest(unittest.TestCase):
         self.assertEqual(report["new_ids"], {"speed": ["speed-something-new"]})
 
 
+    def _run_with_prev(self, finding_overrides):
+        with tempfile.TemporaryDirectory() as tmp:
+            run = Path(tmp, "run")
+            shutil.copytree(FIXTURES / "run1", run)
+            p = run / "modules" / "seo.json"
+            m = json.loads(p.read_text())
+            m["findings"][0].update(finding_overrides)   # seo-canonical-missing
+            p.write_text(json.dumps(m))
+            prev = Path(tmp, "prev.json")
+            prev.write_text(json.dumps([{"id": "seo-canonical-missing", "module": "seo", "severity": "medium",
+                                         "url": "https://www.example.com"}]))
+            subprocess.run([sys.executable, str(SCRIPTS / "merge_findings.py"), "--run", str(run), "--prev", str(prev)],
+                           check=True, capture_output=True)
+            return [x for x in json.loads((run / "findings.json").read_text()) if x["id"] == "seo-canonical-missing"][0]
+
+    def test_recheck_keeps_previous_severity_without_reason(self):
+        f = self._run_with_prev({"severity": "high"})
+        self.assertEqual(f["severity"], "medium")
+        self.assertTrue(f["severity_kept_from_prev"])
+
+    def test_recheck_allows_severity_change_with_reason(self):
+        f = self._run_with_prev({"severity": "high", "severity_changed_reason": "canonical teraz na 5 stronach"})
+        self.assertEqual(f["severity"], "high")
+        self.assertNotIn("severity_kept_from_prev", f)
+
+
+    def test_quick_wins_have_titles(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run = Path(tmp, "run")
+            shutil.copytree(FIXTURES / "run1", run)
+            subprocess.run([sys.executable, str(SCRIPTS / "merge_findings.py"), "--run", str(run)], check=True,
+                           capture_output=True)
+            qw = json.loads((run / "report.json").read_text())["quick_wins"]
+        self.assertLessEqual(len(qw), 3)
+        self.assertTrue(qw)
+        self.assertEqual(set(qw[0]), {"id", "title", "url", "fix", "code_location"})
+        self.assertEqual(qw[0]["id"], "img-oversized")  # highest priority quick win in run1
+
+
 if __name__ == "__main__":
     unittest.main()

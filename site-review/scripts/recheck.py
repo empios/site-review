@@ -5,11 +5,28 @@ for it: its module ran (not skipped) and its page was audited. Otherwise it is "
 """
 from __future__ import annotations
 
-from findings import owner
+from urllib.parse import urlparse
+
+from findings import canonical_id, owner
 
 
-def _key(f):
-    return (f.get("id"), f.get("url"))
+def normalize_url(url: str | None) -> str | None:
+    """Same page regardless of http/https, www./bare host, trailing slash, query or fragment."""
+    if not url:
+        return url
+    p = urlparse(url if "://" in url else "https://" + url)
+    host = (p.hostname or "").lower()
+    if host.startswith("www."):
+        host = host[4:]
+    path = p.path.rstrip("/") or "/"
+    return host + path
+
+
+def key(f):
+    return (canonical_id(f.get("id")), normalize_url(f.get("url")))
+
+
+_key = key
 
 
 def _checked(f: dict, skipped_modules: set | None, audited_urls: set | None) -> bool:
@@ -17,7 +34,7 @@ def _checked(f: dict, skipped_modules: set | None, audited_urls: set | None) -> 
     if skipped_modules and module in skipped_modules:
         return False
     url = f.get("url")
-    if audited_urls is not None and url and url.rstrip("/") not in {u.rstrip("/") for u in audited_urls}:
+    if audited_urls is not None and url and normalize_url(url) not in {normalize_url(u) for u in audited_urls}:
         return False
     return True
 

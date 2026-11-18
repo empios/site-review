@@ -91,3 +91,28 @@ class ModuleFormatTest(unittest.TestCase):
 
     def test_seo_site_wide_rule(self):
         self.assertNotIn("Jeden wpis na stronę (`url`).", (REF / "seo.md").read_text(encoding="utf-8"))
+
+
+class RecheckStabilityDocsTest(unittest.TestCase):
+    def test_retired_aliases_documented(self):
+        cat = (REF / "finding-ids.md").read_text(encoding="utf-8")
+        self.assertIn("Dawne identyfikatory", cat)
+        for old, new in findings.ALIASES.items():
+            self.assertIn(f"`{old}`", cat)
+            self.assertIn(new, cat)
+        self.assertIn("`cro-cta-destination-mismatch`", cat)
+
+    def test_severity_change_reason_documented(self):
+        self.assertIn("severity_changed_reason", (REF / "module-format.md").read_text(encoding="utf-8"))
+
+    def test_external_fonts_single_finding(self):
+        pl = (REF / "pl.md").read_text(encoding="utf-8")
+        self.assertNotIn("każdy host z `speed.json` → `external_fonts_before_consent`", pl)
+        self.assertIn("jedno znalezisko `pl-external-fonts`", pl)
+
+    def test_design_delegation_matches_table(self):
+        self.assertNotIn("frontend-design", section((REF / "design.md").read_text(encoding="utf-8"), "Delegacja"))
+
+    def test_no_inline_module_templates_without_format_ref(self):
+        seo = (REF / "seo.md").read_text(encoding="utf-8")
+        self.assertNotIn('`{"module": "seo", "depth": ..., "reason": ..., "findings": [...]}`', seo)

@@ -114,8 +114,9 @@ class ArtifactFragmentTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             run, _, _ = build(tmp)
             (run / "summary.txt").write_text("S", encoding="utf-8")
-            subprocess.run([sys.executable, str(SCRIPTS / "render_report.py"), "--run", str(run),
-                            "--summary", str(run / "summary.txt")], check=True, capture_output=True)
+            r = subprocess.run([sys.executable, str(SCRIPTS / "render_report.py"), "--run", str(run),
+                                "--summary", str(run / "summary.txt")], check=True, capture_output=True, text=True)
+            self._stdout = r.stdout
             frag = (run / "report.artifact.html").read_text(encoding="utf-8")
         low = frag.lower()
         import re
@@ -125,4 +126,5 @@ class ArtifactFragmentTest(unittest.TestCase):
         self.assertIn('<meta name="claude:viewport-fit-sides" content="cover">', frag)
         self.assertIn('id="sec-method"', frag)
         self.assertIn("color-scheme: dark", frag)
+        self.assertIn("report.artifact.html", self._stdout)
         self.assertIn("max(16px, env(safe-area-inset-left, 0px))", frag)

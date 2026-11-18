@@ -35,6 +35,16 @@ def merge(run: Path, repo: str | None, prev: Path | None) -> dict:
         modules.setdefault(m, {"depth": scoring.SKIPPED, "reason": "moduł nie został uruchomiony"})
 
     merged = fnd.dedupe(raw)
+    prev_list = json.loads(prev.read_text(encoding="utf-8")) if prev and prev.is_file() else None
+    if prev_list:
+        # Stable scores across runs: a problem seen before keeps its previous severity unless the module
+        # says why it changed (severity_changed_reason). Judgement calls must not move the score by themselves.
+        prev_sev = {recheck.key(p): p.get("severity") for p in prev_list if p.get("severity")}
+        for f in merged:
+            old = prev_sev.get(recheck.key(f))
+            if old and old != f.get("severity") and not f.get("severity_changed_reason"):
+                f["severity"] = old
+                f["severity_kept_from_prev"] = True
     depth = {m: v["depth"] for m, v in modules.items()}
     scores = scoring.module_scores(merged, depth)
     quadrants: dict[str, list] = {"quick win": [], "duży projekt": [], "drobiazg": []}
@@ -44,7 +54,6 @@ def merge(run: Path, repo: str | None, prev: Path | None) -> dict:
         if f["confidence"] == fnd.CONFIRMED:
             quadrants[f["quadrant"]].append(f["id"])
 
-    prev_list = json.loads(prev.read_text(encoding="utf-8")) if prev and prev.is_file() else None
     skipped = {m for m, v in modules.items() if v["depth"] == scoring.SKIPPED}
     audited = None
     ctx_path = run / "context.json"
@@ -56,6 +65,9 @@ def merge(run: Path, repo: str | None, prev: Path | None) -> dict:
         "overall": scoring.overall(scores),
         "top": scoring.top(merged),
         "quadrants": quadrants,
+        "quick_wins": [{"id": f["id"], "title": f.get("title"), "url": f.get("url"), "fix": f.get("fix"),
+                        "code_location": f.get("code_location")}
+                       for f in scoring.top([f for f in merged if f["quadrant"] == "quick win"], 3)],
         "unverified": [f for f in merged if f["confidence"] != fnd.CONFIRMED],
         "invalid": invalid,
         "recheck": recheck.diff(prev_list, merged, skipped, audited) if prev_list is not None else None,

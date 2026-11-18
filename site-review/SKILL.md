@@ -97,7 +97,7 @@ Opis wag dla użytkownika: `references/scoring.md`.
 
 W odpowiedzi do użytkownika:
 - wynik ogólny i oceny obszarów (jedna linia każdy, z głębokością),
-- 3 quick wins z `report.json.quadrants["quick win"]` (tytuł + `plik:linia`, jeśli jest),
+- 3 quick wins z `report.json.quick_wins` (tytuł, strona, poprawka, `plik:linia`, jeśli jest),
 - przy `--recheck`: ile naprawionych / nadal / nowych / niesprawdzonych (moduł pominięty albo strona nieaudytowana w tym przebiegu),
 - co było płytkie lub pominięte i dlaczego,
 - `report.json.new_ids` (identyfikatory spoza katalogu) — zaproponuj dopisanie ich do `references/finding-ids.md`,
