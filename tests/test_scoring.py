@@ -104,3 +104,26 @@ class RecheckScopeTest(unittest.TestCase):
             rc = json.loads((run / "report.json").read_text())["recheck"]
         self.assertEqual([x["id"] for x in rc["fixed"]], ["seo-title-missing"])
         self.assertEqual(sorted(x["id"] for x in rc["unchecked"]), ["code-secret-in-client", "seo-noindex"])
+
+
+class RecheckNormalizationTest(unittest.TestCase):
+    def test_www_scheme_and_slash_variants_match(self):
+        prev = [f("seo-redirect-chain", url="http://codeworks-it.pl"),
+                f("speed-render-blocking", url="https://codeworks-it.pl")]
+        curr = [f("seo-redirect-chain", url="https://www.codeworks-it.pl/"),
+                f("speed-render-blocking", url="https://www.codeworks-it.pl/")]
+        d = recheck.diff(prev, curr, audited_urls={"https://www.codeworks-it.pl/"})
+        self.assertEqual(len(d["still"]), 2)
+        self.assertEqual(d["new"] + d["fixed"] + d["unchecked"], [])
+
+    def test_retired_id_alias_matches(self):
+        prev = [f("cro-cta-tel-desktop", module="cro"), f("speed-redirect-apex", module="speed")]
+        curr = [f("cro-cta-phone-only", module="cro"), f("speed-redirect", module="speed")]
+        d = recheck.diff(prev, curr)
+        self.assertEqual(len(d["still"]), 2)
+        self.assertEqual(d["new"] + d["fixed"], [])
+
+    def test_different_paths_still_differ(self):
+        d = recheck.diff([f("a", url="https://e.com/a")], [f("a", url="https://e.com/b")])
+        self.assertEqual(len(d["fixed"]), 1)
+        self.assertEqual(len(d["new"]), 1)

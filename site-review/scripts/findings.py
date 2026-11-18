@@ -59,6 +59,17 @@ def _rank(sev: str) -> int:
     return SEVERITIES.index(sev) if sev in SEVERITIES else len(SEVERITIES)
 
 
+# Retired ids -> their catalogue replacement (keeps --recheck comparable across catalogue changes).
+ALIASES = {
+    "cro-cta-tel-desktop": "cro-cta-phone-only",
+    "speed-redirect-apex": "speed-redirect",
+}
+
+
+def canonical_id(fid: str | None) -> str | None:
+    return ALIASES.get(fid, fid)
+
+
 # Module that owns a finding, from its id prefix. Shared ids (img-*, font-*) belong to speed.
 OWNER = {"seo": "seo", "speed": "speed", "cro": "cro", "design": "design", "a11y": "design",
          "code": "code", "pl": "pl", "img": "speed", "font": "speed"}

@@ -71,6 +71,7 @@ Każde znalezisko używa `id` z tej listy. Ten sam problem zgłoszony przez kilk
 | `cro-cta-missing` | brak głównego wezwania do działania nad zgięciem |
 | `cro-cta-weak` | CTA mało widoczne lub niejasne |
 | `cro-cta-phone-only` | główne CTA na komputerze tylko dzwoni (`tel:`), bez formularza |
+| `cro-cta-destination-mismatch` | CTA obiecuje jedno („Zamów audyt”), a prowadzi do formularza o czymś innym |
 | `cro-cta-offpage-link` | CTA wyprowadza na inną stronę, choć ta ma własny formularz |
 | `cro-cta-competing` | kilka równorzędnych CTA konkuruje ze sobą |
 | `cro-mobile-cta-hidden` | na telefonie CTA poza pierwszym ekranem |
@@ -132,3 +133,12 @@ Każde znalezisko używa `id` z tej listy. Ten sam problem zgłoszony przez kilk
 | `pl-hreflang-pl-missing` | wersje językowe bez `hreflang="pl"` |
 | `pl-keyword-inflection` | fraza w title/H1 w nienaturalnej formie (bez odmiany) |
 | `pl-copy-ai-sounding` | tekst brzmi jak generowany automatycznie |
+
+## Dawne identyfikatory
+
+Te identyfikatory nie są już używane. `--recheck` traktuje je jak ich następców (`scripts/findings.py` → `ALIASES`), więc zmiana nazwy nie wygląda jak „naprawione + nowe”. Przy zmianie nazwy w katalogu dopisz parę tutaj i w `ALIASES`.
+
+| dawny | obecny |
+|---|---|
+| `cro-cta-tel-desktop` | `cro-cta-phone-only` |
+| `speed-redirect-apex` | `speed-redirect` |

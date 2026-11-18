@@ -31,12 +31,14 @@ Każdy moduł zapisuje dokładnie jeden plik `RUN/modules/<moduł>.json`. Skrypt
 | `effort` | tak | `S` (godziny), `M` (dzień–dwa), `L` (więcej) |
 | `source` | tak | `fallback` (checklista), `lighthouse`, `render_diff`, `browser` albo nazwa użytego skilla |
 | `needles` | nie | teksty do szukania w repo (`references/url-to-code.md`) |
+| `severity_changed_reason` | nie | przy `--recheck`: dlaczego waga różni się od poprzedniego audytu (bez tego scalanie przywraca poprzednią wagę) |
 | `code_location` | nie | `{"file", "line", "confidence"}` — tylko z odczytu pliku lub `locate_code.py`, nigdy zgadywane |
 
 ## Zasady
 
 - **Problem całej witryny** (ten sam brak na wszystkich stronach: polityka prywatności, stopka, formularz kontaktowy, `llms.txt`, kolor przycisków) → jedno znalezisko z `url` strony startowej; w `evidence.detail` wypisz strony, na których występuje. Problem jednej podstrony → osobne znalezisko z jej `url`.
 - **Severity z checklisty to wartość domyślna.** Możesz ją obniżyć o jeden poziom, gdy problem występuje tylko częściowo (np. CTA poniżej pierwszego ekranu, ale jest przyklejony pasek z przyciskiem) — napisz to w `evidence.detail`. Podnosić tylko z mocnym dowodem.
-- **Nowe identyfikatory.** Jeśli żaden `id` z katalogu nie pasuje, utwórz `<moduł>-<krótki-opis>` (małe litery, myślniki) i dopisz go do `new_ids` w pliku modułu. Nie edytuj `finding-ids.md` — orkiestrator zbiera `new_ids` w `report.json` i pokazuje je użytkownikowi do dopisania.
+- **Stabilność przy `--recheck`.** Ten sam problem (ten sam `id` i strona) zachowuje wagę z poprzedniego audytu — `merge_findings.py` ją przywraca. Zmieniaj wagę tylko wtedy, gdy problem naprawdę się zmienił, i napisz dlaczego w `severity_changed_reason`. Dzięki temu ocena nie zmienia się od samej interpretacji.
+- **Nowe identyfikatory.** Jeśli żaden `id` z katalogu nie pasuje, utwórz `<moduł>-<krótki-opis>` (małe litery, myślniki) i dopisz go do `new_ids` w pliku modułu (pole `new_ids` pomiń, gdy nie tworzysz nowych). Nie podciągaj problemu pod `id`, którego opis do niego nie pasuje. Nie edytuj `finding-ids.md` — orkiestrator zbiera `new_ids` w `report.json` i pokazuje je użytkownikowi do dopisania.
 - **Ten sam problem z kilku modułów** → ten sam `id` i ten sam `url`; scalanie przypisze go właściwemu modułowi po prefiksie `id`.
 - Nie zmieniaj plików poza `RUN`.

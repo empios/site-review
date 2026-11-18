@@ -209,8 +209,10 @@ def main(argv=None) -> int:
                   a.template.read_text(encoding="utf-8"), str(a.run))
     out = a.run / "report.html"
     out.write_text(html, encoding="utf-8")
-    (a.run / "report.artifact.html").write_text(artifact_fragment(html), encoding="utf-8")
+    frag = a.run / "report.artifact.html"
+    frag.write_text(artifact_fragment(html), encoding="utf-8")
     print(str(out))
+    print(str(frag))
     return 0
 
 

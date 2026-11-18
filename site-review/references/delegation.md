@@ -1,6 +1,6 @@
 # Delegacja do skilli specjalistycznych
 
-Orkiestrator sprawdza listę skilli dostępnych w sesji (lista z promptu systemowego, nazwy z prefiksem pluginu też się liczą) i zapisuje je w `context.json` → `available_skills`. Subagent modułu używa skilla tylko wtedy, gdy jest na tej liście. Nazwy skilli zmieniają się między wersjami — dopasowuj po nazwie i opisie, nie tylko po dokładnym ciągu.
+Orkiestrator sprawdza listę skilli dostępnych w sesji (lista z promptu systemowego, nazwy z prefiksem pluginu też się liczą) i zapisuje je w `context.json` → `available_skills`. Do `available_skills` wpisuj tylko skille z tabeli poniżej (inne, np. `frontend-design`, nie oceniają strony). Subagent modułu używa skilla tylko wtedy, gdy jest na tej liście. Nazwy skilli zmieniają się między wersjami — dopasowuj po nazwie i opisie, nie tylko po dokładnym ciągu.
 
 | moduł | skille (kolejność preferencji) | bez nich |
 |---|---|---|

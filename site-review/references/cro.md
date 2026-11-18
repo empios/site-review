@@ -26,6 +26,7 @@ Zasady: dowodem jest zrzut ekranu (`evidence.type = "screenshot"`, `evidence.pat
 | `cro-cta-missing` | brak głównego przycisku akcji w pierwszym ekranie | high | 3 | S | screenshot |
 | `cro-cta-weak` | CTA słabo widoczne (kolor, rozmiar) lub ogólne („Wyślij”, „Kliknij”) | medium | 2 | S | screenshot |
 | `cro-cta-phone-only` | na 1440 px główne CTA w pierwszym ekranie to tylko `tel:` | medium | 2 | S | screenshot |
+| `cro-cta-destination-mismatch` | tekst CTA nie zgadza się z tym, co jest pod linkiem (np. „Zamów audyt” → ogólny formularz rozmowy) | medium | 2 | S | dom |
 | `cro-cta-offpage-link` | CTA prowadzi na inną stronę, choć bieżąca ma formularz | low | 1 | S | dom |
 | `cro-cta-competing` | ≥ 3 równorzędne przyciski w pierwszym ekranie | medium | 2 | S | screenshot |
 | `cro-mobile-cta-hidden` | na 375 px CTA poza pierwszym ekranem | medium | 3 | S | screenshot |

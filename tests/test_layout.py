@@ -71,3 +71,8 @@ class SkillRunSetupTest(unittest.TestCase):
     def test_module_format_and_new_ids_mentioned(self):
         self.assertIn("references/module-format.md", self.text)
         self.assertIn("new_ids", self.text)
+
+
+class SkillQuickWinsTest(unittest.TestCase):
+    def test_quick_wins_from_report(self):
+        self.assertIn("report.json.quick_wins", (SKILL / "SKILL.md").read_text(encoding="utf-8"))

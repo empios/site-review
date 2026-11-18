@@ -19,7 +19,6 @@ Zasady: dowód = zrzut (ścieżka względem `RUN`; do `evidence.path` wybieraj `
 - `design:design-critique` — krytyka hierarchii, układu i spójności na zrzutach.
 - `design:accessibility-review` — przegląd WCAG 2.1 AA.
 - `web-design-guidelines` — reguły UI (focus, formularze, typografia, dotyk).
-- `frontend-design` — tylko do propozycji poprawek, nie do oceny.
 
 ## Checklista
 
