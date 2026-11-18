@@ -76,3 +76,12 @@ class SkillRunSetupTest(unittest.TestCase):
 class SkillQuickWinsTest(unittest.TestCase):
     def test_quick_wins_from_report(self):
         self.assertIn("report.json.quick_wins", (SKILL / "SKILL.md").read_text(encoding="utf-8"))
+
+
+class SkillSubpagesTest(unittest.TestCase):
+    text = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+
+    def test_subpages_measured(self):
+        self.assertIn("RUN/pages/i", self.text)
+        self.assertIn('lighthouse_runs.sh" PAGE_URL RUN/pages/i 1 0', self.text)
+        self.assertIn("scripts/pages_summary.py", self.text)

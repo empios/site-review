@@ -40,7 +40,7 @@ class RenderReportTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             run, report, found = build(tmp)
             html = render_report.render(report, found, "S", TEMPLATE, str(run))
-        ids = ["sec-summary", "sec-scores", "sec-top", "sec-modules", "sec-unverified", "sec-method"]
+        ids = ["sec-summary", "sec-scores", "sec-top", "sec-pages", "sec-modules", "sec-unverified", "sec-method"]
         pos = [html.index(f'id="{i}"') for i in ids]
         self.assertEqual(pos, sorted(pos))
 
@@ -128,3 +128,25 @@ class ArtifactFragmentTest(unittest.TestCase):
         self.assertIn("color-scheme: dark", frag)
         self.assertIn("report.artifact.html", self._stdout)
         self.assertIn("max(16px, env(safe-area-inset-left, 0px))", frag)
+
+
+class PagesSectionTest(unittest.TestCase):
+    def test_pages_table(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run, report, found = build(tmp)
+            report["pages"] = [
+                {"url": "https://example.com/", "title": "Home", "status": 200,
+                 "lighthouse": {"lcp_ms": 1700, "accessibility": 95, "runs": 3},
+                 "modules": {"seo": 1, "speed": "bez uwag", "cro": "nie sprawdzono", "design": "bez uwag",
+                             "pl": "pominięty", "code": "pominięty"}},
+                {"url": "https://example.com/<b>x</b>", "title": "X", "status": 404, "lighthouse": None,
+                 "modules": {"seo": "bez uwag", "speed": "nie sprawdzono", "cro": "nie sprawdzono",
+                             "design": "nie sprawdzono", "pl": "pominięty", "code": "pominięty"}}]
+            html = render_report.render(report, found, "S", TEMPLATE, str(run))
+        sec = html[html.index('id="sec-pages"'):html.index('id="sec-modules"')]
+        self.assertIn("1,7 s", sec)
+        self.assertIn("95", sec)
+        self.assertIn("bez uwag", sec)
+        self.assertIn("nie sprawdzono", sec)
+        self.assertIn("404", sec)
+        self.assertNotIn("<b>x</b>", sec)

@@ -10,6 +10,7 @@ Format wyniku i zasady wspólne (pola znaleziska, typy dowodu, problemy całej w
 
 Wejście: `speed.json` → `trackers_before_consent` (lista hostów śledzących załadowanych bez żadnej interakcji = przed zgodą), zrzuty 375/1440 px, `basics.json`, surowe HTML.
 
+0. Przejdź każdą stronę z `RUN/pages.json` i wpisz ocenione adresy do `pages_checked` (`references/module-format.md`). Trackery i fonty dla każdej strony są w `RUN/pages.json` (`trackers_before_consent`, `external_fonts_before_consent`). Jeśli występują na wszystkich stronach — jedno znalezisko na stronie startowej z listą stron; jeśli tylko na niektórych — znalezisko z `url` tej podstrony.
 1. Fonty zewnętrzne: jeśli `speed.json` → `external_fonts_before_consent` jest niepuste → jedno znalezisko `pl-external-fonts` na stronie startowej z listą wszystkich hostów w dowodzie (to problem całej witryny). Tracking przed zgodą: jeśli `trackers_before_consent` jest niepuste → jedno znalezisko `pl-tracking-before-consent` na stronie startowej, dowód typu `measurement` z listą wszystkich hostów („załadowane przy otwarciu strony, bez kliknięcia w baner”).
 2. Baner cookies: na zrzucie 375 px — czy jest baner, czy „Odrzuć” jest równie łatwe jak „Akceptuj” (ten sam poziom, podobna wielkość).
 3. Linki prawne: w HTML szukaj linków do polityki prywatności, regulaminu, danych firmy (stopka).

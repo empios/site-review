@@ -80,5 +80,30 @@ class MergeTest(unittest.TestCase):
         self.assertEqual(qw[0]["id"], "img-oversized")  # highest priority quick win in run1
 
 
+    def test_page_coverage(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run = Path(tmp, "run")
+            shutil.copytree(FIXTURES / "run1", run)
+            ctx = json.loads((run / "context.json").read_text())
+            ctx["pages"] = ["https://example.com/", "https://example.com/oferta"]
+            (run / "context.json").write_text(json.dumps(ctx))
+            seo = json.loads((run / "modules" / "seo.json").read_text())
+            seo["pages_checked"] = ctx["pages"]
+            (run / "modules" / "seo.json").write_text(json.dumps(seo))
+            (run / "pages.json").write_text(json.dumps([
+                {"url": "https://example.com/", "title": "Home", "status": 200, "lighthouse": {"lcp_ms": 1700}},
+                {"url": "https://example.com/oferta", "title": "Oferta", "status": 200, "lighthouse": None}]))
+            subprocess.run([sys.executable, str(SCRIPTS / "merge_findings.py"), "--run", str(run)], check=True,
+                           capture_output=True)
+            pages = json.loads((run / "report.json").read_text())["pages"]
+        home, offer = pages
+        self.assertEqual(home["modules"]["seo"], 1)            # seo-canonical-missing on the start page
+        self.assertEqual(offer["modules"]["seo"], "bez uwag")    # checked, nothing found
+        self.assertEqual(offer["modules"]["design"], "nie sprawdzono")  # design gave no pages_checked
+        self.assertEqual(offer["modules"]["cro"], "pominięty")  # module not run in run1
+        self.assertEqual(home["lighthouse"]["lcp_ms"], 1700)
+        self.assertEqual(offer["title"], "Oferta")
+
+
 if __name__ == "__main__":
     unittest.main()

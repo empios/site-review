@@ -8,6 +8,7 @@ Każdy moduł zapisuje dokładnie jeden plik `RUN/modules/<moduł>.json`. Skrypt
   "depth": "pełny | płytki | pominięty",
   "reason": "co sprawdzono, czego nie i co by to pogłębiło (widać w raporcie)",
   "new_ids": ["seo-cos-nowego"],
+  "pages_checked": ["https://www.example.pl/", "https://www.example.pl/oferta"],
   "findings": [ { "...": "znalezisko, niżej" } ]
 }
 ```
@@ -36,6 +37,7 @@ Każdy moduł zapisuje dokładnie jeden plik `RUN/modules/<moduł>.json`. Skrypt
 
 ## Zasady
 
+- **Każda strona.** Przejdź wszystkie strony z `RUN/pages.json` (to te same adresy co `context.json.pages`) i wpisz do `pages_checked` każdą, którą naprawdę oceniłeś — także te bez uwag. Strona bez znalezisk i spoza `pages_checked` pokazuje się w raporcie jako „nie sprawdzono”.
 - **Problem całej witryny** (ten sam brak na wszystkich stronach: polityka prywatności, stopka, formularz kontaktowy, `llms.txt`, kolor przycisków) → jedno znalezisko z `url` strony startowej; w `evidence.detail` wypisz strony, na których występuje. Problem jednej podstrony → osobne znalezisko z jej `url`.
 - **Severity z checklisty to wartość domyślna.** Możesz ją obniżyć o jeden poziom, gdy problem występuje tylko częściowo (np. CTA poniżej pierwszego ekranu, ale jest przyklejony pasek z przyciskiem) — napisz to w `evidence.detail`. Podnosić tylko z mocnym dowodem.
 - **Stabilność przy `--recheck`.** Ten sam problem (ten sam `id` i strona) zachowuje wagę z poprzedniego audytu — `merge_findings.py` ją przywraca. Zmieniaj wagę tylko wtedy, gdy problem naprawdę się zmienił, i napisz dlaczego w `severity_changed_reason`. Dzięki temu ocena nie zmienia się od samej interpretacji.
